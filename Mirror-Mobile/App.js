@@ -1,27 +1,27 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, View } from 'react-native';
-import TopBar from './src/components/TopBar';
-import SearchBar from './src/components/SearchBar';
-import CategoryFilter from './src/components/CategoryFilter';
-import ProductGrid from './src/components/ProductGrid';
-import BottomNavBar from './src/components/BottomNavBar';
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { AuthProvider } from "./src/context/AuthContext";
+import OnboardingScreen from "./src/screens/OnboardingScreen";
+import LoginScreen from "./src/screens/LoginScreen";
+import HomeScreen from "./src/screens/HomeScreen";
+import ProfileScreen from "./src/screens/ProfileScreen";
+
+const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <StatusBar style="auto" />
-      <TopBar />
-      <SearchBar />
-      <CategoryFilter />
-      <ProductGrid />
-      <BottomNavBar />
-    </View>
+    <AuthProvider>
+      <NavigationContainer>
+        <Stack.Navigator
+          initialRouteName="Onboarding"
+          screenOptions={{ headerShown: false }}
+        >
+          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="Profile" component={ProfileScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </AuthProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-});
