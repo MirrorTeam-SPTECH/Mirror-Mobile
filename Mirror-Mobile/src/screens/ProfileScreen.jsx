@@ -7,7 +7,7 @@ export default function ProfileScreen({ navigation }) {
 
   const handleLogout = () => {
     logout();
-    navigation.replace("Home");
+    navigation.navigate("Login");
   };
 
   return (
@@ -23,12 +23,12 @@ export default function ProfileScreen({ navigation }) {
       </View>
 
       <View style={styles.menu}>
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate("OrderHistory")}>
           <Text style={styles.menuIcon}>📋</Text>
           <Text style={styles.menuText}>Meus Pedidos</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate("Favorites")}>
           <Text style={styles.menuIcon}>❤️</Text>
           <Text style={styles.menuText}>Favoritos</Text>
         </TouchableOpacity>

@@ -5,7 +5,6 @@ import TopBar from "../components/TopBar";
 import SearchBar from "../components/SearchBar";
 import CategoryFilter from "../components/CategoryFilter";
 import ProductGrid from "../components/ProductGrid";
-import BottomNavBar from "../components/BottomNavBar";
 
 export default function HomeScreen() {
   return (
@@ -15,7 +14,6 @@ export default function HomeScreen() {
       <SearchBar />
       <CategoryFilter />
       <ProductGrid />
-      <BottomNavBar />
     </View>
   );
 }

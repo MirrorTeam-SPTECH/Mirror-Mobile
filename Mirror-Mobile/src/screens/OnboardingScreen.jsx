@@ -1,13 +1,16 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { StyleSheet, Text, View, TouchableOpacity, Image } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function OnboardingScreen({ navigation }) {
-  const handleSkip = () => {
-    navigation.replace("Home");
+  const handleSkip = async () => {
+    await AsyncStorage.setItem("hasSeenOnboarding", "true");
+    navigation.replace("Login");
   };
 
-  const handleStart = () => {
-    navigation.replace("Home");
+  const handleStart = async () => {
+    await AsyncStorage.setItem("hasSeenOnboarding", "true");
+    navigation.replace("Login");
   };
 
   return (

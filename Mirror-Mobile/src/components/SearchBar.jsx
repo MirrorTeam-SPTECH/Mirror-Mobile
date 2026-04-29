@@ -22,12 +22,12 @@ const styles = StyleSheet.create({
     width: "90%",
     height: 45,
     justifyContent: "center",
-    alignItems: "flex-start", 
-    backgroundColor: "#ffff",
+    alignItems: "flex-start",
+    backgroundColor: "#fff",
     color: "#C4C4C4",
     paddingHorizontal: 10,
     borderRadius: 15,
-    marginTop: -25.
+    marginTop: -25
   },
   input: {
     width: "100%",

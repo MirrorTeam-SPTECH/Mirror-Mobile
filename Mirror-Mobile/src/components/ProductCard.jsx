@@ -1,24 +1,34 @@
 import { StyleSheet, Text, View, Image, TouchableOpacity } from "react-native";
-import React, { useState } from "react";
+import React from "react";
+import { useNavigation } from "@react-navigation/native";
+import { useFavorites } from "../context/FavoritesContext";
 
 export default function ProductCard({ product }) {
-  const [isFavorite, setIsFavorite] = useState(false);
+  const navigation = useNavigation();
+  const { isFavorite, toggleFavorite } = useFavorites();
+
+  const handleCardPress = () => {
+    navigation.navigate("ProductDetail", { productId: product.id });
+  };
 
   return (
-    <View style={styles.card}>
+    <TouchableOpacity style={styles.card} onPress={handleCardPress} activeOpacity={0.7}>
       <TouchableOpacity
         style={styles.favoriteButton}
-        onPress={() => setIsFavorite(!isFavorite)}
+        onPress={(e) => {
+          e.stopPropagation();
+          toggleFavorite(product.id);
+        }}
       >
-        <Text style={styles.heartIcon}>{isFavorite ? "❤️" : "🤍"}</Text>
+        <Text style={styles.heartIcon}>{isFavorite(product.id) ? "❤️" : "🤍"}</Text>
       </TouchableOpacity>
 
       <Image source={{ uri: product.image }} style={styles.image} />
 
       <Text style={styles.name}>{product.name}</Text>
       <Text style={styles.time}>⏱ {product.time}</Text>
-      <Text style={styles.price}>R$ {product.price}</Text>
-    </View>
+      <Text style={styles.price}>{product.price}</Text>
+    </TouchableOpacity>
   );
 }
 

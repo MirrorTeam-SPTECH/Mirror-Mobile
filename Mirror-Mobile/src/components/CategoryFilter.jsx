@@ -5,18 +5,11 @@ import {
   ScrollView,
   TouchableOpacity,
 } from "react-native";
-import React, { useState } from "react";
-
-const categories = [
-  { id: 1, name: "Hamburgueres" },
-  { id: 2, name: "Bebidas" },
-  { id: 3, name: "Acompanhamentos" },
-  { id: 4, name: "Sobremesas" },
-  { id: 5, name: "Combos" },
-];
+import React from "react";
+import { useProducts } from "../context/ProductsContext";
 
 export default function CategoryFilter() {
-  const [selectedCategory, setSelectedCategory] = useState(1);
+  const { categories, selectedCategory, setSelectedCategory } = useProducts();
 
   return (
     <View style={styles.container}>
@@ -25,6 +18,29 @@ export default function CategoryFilter() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
+        {/* "Todos" button to show all products */}
+        <TouchableOpacity
+          style={[
+            styles.button,
+            selectedCategory === null
+              ? styles.buttonActive
+              : styles.buttonInactive,
+          ]}
+          onPress={() => setSelectedCategory(null)}
+        >
+          <Text
+            style={[
+              styles.buttonText,
+              selectedCategory === null
+                ? styles.textActive
+                : styles.textInactive,
+            ]}
+          >
+            Todos
+          </Text>
+        </TouchableOpacity>
+
+        {/* Category buttons from API */}
         {categories.map((category) => (
           <TouchableOpacity
             key={category.id}
@@ -76,7 +92,7 @@ const styles = StyleSheet.create({
     borderColor: "#C41E3A",
   },
   buttonInactive: {
-    backgroundColor: "#transparent",
+    backgroundColor: "transparent",
     borderColor: "#C41E3A",
   },
   buttonText: {
