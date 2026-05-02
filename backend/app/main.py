@@ -78,7 +78,9 @@ from app.domains.nutrition import models as _nutrition_models  # noqa: F401
 from app.domains.orders.routes import router as orders_router
 from app.domains.users.routes import router as users_router
 from app.domains.nutrition.routes import router as nutrition_router
+from app.domains.ai_core.routes import router as ai_core_router
 
 app.include_router(orders_router, prefix="/api", tags=["catalog & orders"])
 app.include_router(users_router, prefix="/api/users", tags=["users"])
 app.include_router(nutrition_router, prefix="/api/nutrition", tags=["nutrition"])
+app.include_router(ai_core_router, prefix="/api", tags=["ai"])
