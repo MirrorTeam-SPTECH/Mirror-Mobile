@@ -19,6 +19,8 @@ import CheckoutScreen from "./src/screens/CheckoutScreen";
 import FavoritesScreen from "./src/screens/FavoritesScreen";
 import OrderTrackingScreen from "./src/screens/OrderTrackingScreen";
 import OrderHistoryScreen from "./src/screens/OrderHistoryScreen";
+import GrillAdvisorScreen from "./src/screens/GrillAdvisorScreen";
+import LabelScannerScreen from "./src/screens/LabelScannerScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -140,6 +142,8 @@ export default function App() {
                 <Stack.Screen name="Checkout" component={CheckoutScreen} />
                 <Stack.Screen name="OrderTracking" component={OrderTrackingScreen} />
                 <Stack.Screen name="OrderHistory" component={OrderHistoryScreen} />
+                <Stack.Screen name="GrillAdvisor" component={GrillAdvisorScreen} />
+                <Stack.Screen name="LabelScanner" component={LabelScannerScreen} />
               </Stack.Navigator>
             </NavigationContainer>
           </CartProvider>

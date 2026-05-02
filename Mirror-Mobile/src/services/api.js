@@ -141,6 +141,31 @@ export async function getNutritionNarrative(productId, productName, nutrition) {
 }
 
 // ============================================================================
+// AI Features
+// ============================================================================
+
+export async function getNutritionRanking(orderId) {
+  return fetchAPI('/nutrition-ranking', {
+    method: 'POST',
+    body: JSON.stringify({ order_id: orderId }),
+  });
+}
+
+export async function analyzeGrillImage(imageBase64, mediaType = 'image/jpeg') {
+  return fetchAPI('/grill-advisor', {
+    method: 'POST',
+    body: JSON.stringify({ image_base64: imageBase64, media_type: mediaType }),
+  });
+}
+
+export async function analyzeLabelScanner(imageBase64, mediaType = 'image/jpeg') {
+  return fetchAPI('/label-scanner', {
+    method: 'POST',
+    body: JSON.stringify({ image_base64: imageBase64, media_type: mediaType }),
+  });
+}
+
+// ============================================================================
 // Helpers
 // ============================================================================
 

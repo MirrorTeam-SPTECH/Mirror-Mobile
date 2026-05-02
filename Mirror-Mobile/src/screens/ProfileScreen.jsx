@@ -33,14 +33,14 @@ export default function ProfileScreen({ navigation }) {
           <Text style={styles.menuText}>Favoritos</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuIcon}>📍</Text>
-          <Text style={styles.menuText}>Endereços</Text>
+        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate("GrillAdvisor")}>
+          <Text style={styles.menuIcon}>🔥</Text>
+          <Text style={styles.menuText}>Churrasqueiro de Bolso</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuIcon}>⚙️</Text>
-          <Text style={styles.menuText}>Configurações</Text>
+        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate("LabelScanner")}>
+          <Text style={styles.menuIcon}>🔍</Text>
+          <Text style={styles.menuText}>Scanner Comparativo</Text>
         </TouchableOpacity>
       </View>
 
