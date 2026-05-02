@@ -7,12 +7,12 @@ Projeto universitário, time pequeno, cliente real.
 
 ## Stack
 
-- **Mobile**: Expo 54 + React Native 0.81.5, React Navigation 7, AsyncStorage
-- **Backend**: FastAPI 0.109 + SQLAlchemy 2.0 + PostgreSQL + Alembic (estrutura criada, migrations pendentes)
+- **Mobile**: Expo 54 + React Native 0.81.5, React Navigation 7, AsyncStorage, expo-image-picker
+- **Backend**: FastAPI 0.109 + SQLAlchemy 2.0 + PostgreSQL 18 + Alembic (migration inicial aplicada)
 - **Data lake**: pipeline Medallion (Bronze → Silver → Gold) sobre PNAE/TACO, já rodando
-- **Auth**: JWT próprio com passlib/bcrypt (já em requirements.txt) — endpoints ainda não implementados
-- **Pagamento**: Mercado Pago SDK 2.2.1 (integração pendente)
-- **IA**: Claude API via `anthropic` SDK (já em requirements.txt) — integração pendente
+- **Auth**: JWT próprio com passlib/bcrypt — **funcionando** (register, login, me, persistência mobile)
+- **Pagamento**: Mercado Pago SDK 2.2.1 — **funcionando** (preferência + webhook)
+- **IA**: Claude API via `anthropic` SDK — endpoints implementados; requer `CLAUDE_API_KEY` válida
 - **Push**: Expo Push Notifications (pendente)
 
 ---
@@ -24,18 +24,18 @@ Mobile (Expo/RN)
    │
    ▼  REST/HTTPS
 Backend (FastAPI)
-   ├── Orders service     — catálogo OK; criar pedido/status/histórico pendente
-   ├── Users service      — estrutura criada, endpoints são stubs (TODO)
-   ├── Nutrition service  — estrutura criada, lógica pendente
-   ├── AI core service    — estrutura criada, integração Claude pendente
+   ├── Orders service     — catálogo, pedidos, favoritos, MP: tudo OK
+   ├── Users service      — register, login (JWT/bcrypt), me: OK
+   ├── Nutrition service  — cálculo SQL OK; narrativa Claude OK
+   ├── AI core service    — implementado (grill-advisor, label-scanner, nutrition-ranking via Claude Vision)
    └── Push service       — estrutura criada, lógica pendente
    │
    ▼
 Dados e integrações
-   ├── PostgreSQL         — modelos definidos, migrations ainda não geradas
+   ├── PostgreSQL         — modelos + migration inicial aplicada (revision 465e0bbebea4)
    ├── Data Lake          — Medallion (Bronze/Silver/Gold) com PNAE enriquecida
    ├── Claude API         — via AI core service (modelo: claude-sonnet-4-6)
-   └── Mercado Pago       — via Orders service (com webhook)
+   └── Mercado Pago       — preferência + webhook implementados
 ```
 
 ---
@@ -70,7 +70,7 @@ Dados e integrações
 
 ## Modelo de dados — Pedidos
 
-Entidades principais (PostgreSQL — modelos definidos, migrations pendentes):
+Entidades principais (PostgreSQL — migration inicial aplicada, ver `backend/alembic/versions/`):
 
 ### Core transacional
 - `USER` — `id, email, name, phone, hashed_password, created_at`
@@ -116,77 +116,75 @@ Para cada `ORDER_ITEM`:
 
 ---
 
-## Estado atual (2026-04-29)
+## Estado atual (2026-05-02)
 
 ### Backend
 - [x] Estrutura modular por domínio: `orders/`, `users/`, `nutrition/`, `ai_core/`, `push/`
 - [x] Modelos SQLAlchemy completos (13 entidades)
 - [x] Config via `pydantic-settings`, CORS, logs estruturados (JSON)
-- [x] Seed script: 5 categorias, 13 produtos, 17 grupos de opção, 56 opções
-- [x] `GET /api/categories` — funcionando
-- [x] `GET /api/products` — funcionando (com filtro por category_id)
-- [x] `GET /api/products/{id}` — funcionando (com option_groups eager-loaded)
-- [ ] Alembic migrations — **pasta `versions/` vazia**, nenhuma migration gerada ainda
-- [ ] `POST /api/orders` — stub (501)
-- [ ] `GET /api/orders` — stub (501)
-- [ ] `GET /api/orders/{id}` — stub (501)
-- [ ] Auth: `POST /register`, `POST /login`, `GET /me` — stubs sem lógica
-- [ ] Mercado Pago: nenhuma integração
-- [ ] Nutrição: nenhum endpoint implementado
-- [ ] Claude API: nenhuma integração
+- [x] Seed script: 5 categorias, 13 produtos, 17 grupos de opção, 56 opções, 15 ingredientes com macros
+- [x] `GET /api/categories`, `GET /api/products`, `GET /api/products/{id}` — funcionando
+- [x] `POST /api/orders` — funcionando (validação de opções, cálculo de subtotal, snapshots)
+- [x] `GET /api/orders`, `GET /api/orders/{id}` — funcionando
+- [x] `GET/POST/DELETE /api/favorites` — funcionando
+- [x] Auth: `POST /register`, `POST /login` (JWT/bcrypt), `GET /me` — funcionando (register/login devolvem `access_token` + `user`)
+- [x] Mercado Pago: `POST /api/orders/{id}/pay` + `POST /api/webhooks/mercadopago` — funcionando
+- [x] Nutrição: `GET /api/nutrition/products/{id}` + `POST /api/nutrition/narrative` (Claude) — funcionando
+- [x] Alembic migration inicial aplicada (`alembic/versions/20260501_1436-465e0bbebea4_initial.py`)
+- [x] `POST /api/nutrition-ranking` — implementado (ranking SQL + narrativa Claude)
+- [x] `POST /api/grill-advisor` — implementado (Claude Vision: ponto da carne + dica)
+- [x] `POST /api/label-scanner` — implementado (Claude Vision: OCR rótulo + sugestão de equivalente)
+- [x] Endpoints de IA devolvem **HTTP 503** quando `CLAUDE_API_KEY` é vazia ou placeholder (`your-claude-key`)
+- [ ] `CLAUDE_API_KEY` ainda é placeholder no `.env` (precisa de chave real para os endpoints de IA funcionarem)
 - [ ] Push: nenhuma integração
 
 ### Mobile
 - [x] Navegação: Stack Navigator + Tab Navigator (5 tabs) corretamente aninhados
 - [x] Onboarding com flag `hasSeenOnboarding` no AsyncStorage
-- [x] HomeScreen com TopBar, SearchBar, CategoryFilter, ProductGrid
-- [x] CartScreen completa (adicionar/remover/ajustar quantidade, limpar)
-- [x] ProductDetailScreen com seleção de opções (radio/checkbox) e cálculo de preço
-- [x] CheckoutScreen visual completa (form + resumo + botão MP) — **sem integração real**
-- [x] ProfileScreen visual (menu de itens, logout)
-- [x] LoginScreen visual — **login aceita qualquer entrada, sem auth real**
-- [x] CartContext com persistência AsyncStorage
-- [x] ProductsContext integrado à API (categorias e produtos)
-- [x] FavoritesContext funcional — **sem persistência no servidor**
-- [x] AuthContext — **stub, sem persistência**
-- [x] `CheckoutScreen` registrada no Stack.Navigator (App.js)
-- [x] Botão "Finalizar Pedido" no CartScreen navega para CheckoutScreen
-- [ ] Botão "Pagar com Mercado Pago" no CheckoutScreen — sem integração real
-- [ ] OrderTrackingScreen — não existe
-- [ ] OrderHistoryScreen — não existe
-- [ ] SearchBar sem funcionalidade (visual apenas)
-- [ ] Tab "Search" e tab "Favorites" bloqueados (preventDefault)
-- [ ] `api.js` com URL hardcoded `http://localhost:8000` (precisa de config por ambiente)
-- [ ] Imagens de produtos: `image_url` é null no seed, todas imagens quebradas
+- [x] HomeScreen, CartScreen, ProductDetailScreen, ProfileScreen, LoginScreen — completas
+- [x] CheckoutScreen integrada: cria pedido → `POST /pay` → `Linking.openURL()` para MP
+- [x] OrderTrackingScreen: polling a cada 5s, exibe status + `pickup_code`, suporta todos os estados
+- [x] OrderHistoryScreen com modal de Nutrition Ranking (chama `/nutrition-ranking`)
+- [x] CartContext, ProductsContext, FavoritesContext (sincronizado com backend)
+- [x] AuthContext com chamadas reais à API + **persistência completa** no AsyncStorage (auto-login funciona)
+- [x] GrillAdvisorScreen integrada com `/grill-advisor` (câmera + galeria via `expo-image-picker`)
+- [x] LabelScannerScreen integrada com `/label-scanner` (câmera + galeria via `expo-image-picker`)
+- [x] ProfileScreen com itens "Churrasqueiro de Bolso" e "Scanner Comparativo"; "Endereços" removido
+- [x] `api.js` lê URL via `process.env.EXPO_PUBLIC_API_URL` com fallback `http://localhost:8000/api`
+- [ ] SearchBar ainda visual apenas (sem `onChangeText`/state)
+- [ ] Tab "Search" no `MainTabs` faz `e.preventDefault()` — botão sem ação
+- [ ] Imagens de produtos: `image_url` é null no seed (13/13 produtos sem imagem)
+- [ ] Cache offline (AsyncStorage para menu/histórico) — não implementado
 
 ---
 
 ## Próximos passos (ordem de prioridade)
 
-### Prioridade 1 — Fluxo de pedido (core do app)
-1. Gerar migration Alembic inicial (`alembic revision --autogenerate -m "initial"`)
-2. Implementar auth mínimo: `POST /register`, `POST /login` (JWT), `GET /me`
-3. Implementar `POST /api/orders` com cálculo de total e geração de `pickup_code`
-4. Implementar `GET /api/orders` e `GET /api/orders/{id}`
-5. Integrar Mercado Pago: criar preferência em `POST /api/orders/{id}/pay`
-6. Implementar webhook: `POST /api/webhooks/mercadopago` (única fonte de verdade)
-7. Conectar mobile: AuthContext → API real, CheckoutScreen → POST /orders + abrir MP
-8. Criar `OrderTrackingScreen` (polling de status + pickup_code)
+### Prioridade 1 — Validar IA com chave real
+1. Configurar `CLAUDE_API_KEY` real no `backend/.env` (gerar em https://console.anthropic.com/settings/keys)
+2. Testar fim-a-fim: GrillAdvisorScreen, LabelScannerScreen, modal de nutrição em OrderHistoryScreen
+3. Em modo dev sem chave, considerar mockar respostas para destravar UI
 
-### Prioridade 2 — Auth e persistência
-9. Persistir token JWT no AsyncStorage (auto-login)
-10. Sincronizar FavoritesContext com backend (endpoints de favoritos)
+### Prioridade 2 — UX e polish do mobile
+4. SearchBar funcional: state + filtragem de produtos no `ProductsContext`
+5. Tab "Search" no `MainTabs` precisa de tela própria (hoje só `e.preventDefault()`)
+6. Imagens de produtos: popular `image_url` no seed (URLs de CDN/produção, não hotlink)
+7. Deletar `BottomNavBar.jsx` (código morto, substituído pelo Tab Navigator)
 
-### Prioridade 3 — Nutrição e IA
-11. Implementar endpoints de nutrição (cálculo SQL puro)
-12. Integrar Claude API para narrativa nutricional
-13. Grill Advisor e Label Scanner (Claude Vision)
+### Prioridade 3 — Push Notifications
+8. Adicionar `expo-notifications` no `package.json`
+9. Setup Expo Push no mobile (permissões, registro de token)
+10. Endpoint backend para registrar token do usuário
+11. Disparar push em transições de status (`paid`, `ready`) no `OrderRepository`
+
+### Prioridade 4 — Cache offline
+12. Cachear menu (`/products`, `/categories`) em AsyncStorage com TTL
+13. Cachear `/orders` localmente para histórico funcionar sem rede
 
 ### Fases posteriores
-- Geolocalização e alertas de proximidade
-- Push notifications por status de pedido
-- Sugestões de payday
-- Histórico offline (SQLite local)
+- Geolocalização + alerta de proximidade do food truck
+- Sugestões de "lanche de sempre" em semana de pagamento
+- LGPD: endpoint de exportação e exclusão de dados
 
 ---
 
@@ -198,7 +196,8 @@ Para cada `ORDER_ITEM`:
 - **Alertas nativos**: usar `Alert.alert` do `react-native`, nunca `confirm()` ou `alert()` do browser
 - **Favoritos**: `FavoritesContext` — nunca estado local no card
 - **Navegação**: Tab Navigator (`@react-navigation/bottom-tabs`) aninhado em Stack. `BottomNavBar.jsx` é código morto (não usado), pode ser deletado
-- **Auth**: stub atual não persiste. Não confiar nele pra lógica real
+- **Auth**: token JWT é persistido em AsyncStorage com chave `@portal_churras:token`. `AuthContext` faz `getMe()` ao abrir o app para restaurar sessão; em caso de erro (401), limpa o token. Sempre usar `useAuth()` em vez de manipular AsyncStorage diretamente
+- **API base URL**: vem de `process.env.EXPO_PUBLIC_API_URL` (definida no `.env` do mobile). Para device físico testando, use o IP da máquina (ex: `EXPO_PUBLIC_API_URL=http://192.168.0.10:8000/api`), não `localhost`
 - **URLs de imagem**: só URLs de produção/CDN. Evitar hotlinks externos
 - **Estilos**: paleta principal — vermelho `#D91C1C` (primary), vinho `#8B1C1C` (primary-dark), `#740000` (cta), `#C41E3A` (accent)
 
@@ -225,12 +224,12 @@ Para cada `ORDER_ITEM`:
 
 | Arquivo | Problema | Prioridade |
 |---------|----------|-----------|
+| `backend/.env` | `CLAUDE_API_KEY=your-claude-key` (placeholder) — endpoints de IA devolvem 503 até trocar pela chave real | Alta |
+| `seed_catalog.py` | `image_url` ausente em todos os produtos (13/13 sem imagem) | Média |
+| `App.js` (MainTabs) | Tab "Search" só faz `e.preventDefault()` — botão clicável sem destino | Média |
+| `SearchBar.jsx` | Componente sem `onChangeText`/state — apenas visual | Média |
 | `BottomNavBar.jsx` | Componente morto (não importado em lugar nenhum) — deletar | Baixa |
-| `api.js` | URL hardcoded `http://localhost:8000` | Alta (antes de prod) |
-| `FavoritesContext.jsx` | Sem persistência (perde ao reabrir app) | Média |
-| `AuthContext.jsx` | Stub sem persistência — migrar pra auth real | Alta |
-| `ProfileScreen.jsx` | Item "Endereços" no menu não faz sentido (pickup-only) | Baixa |
-| Seed script | `image_url = null` em todos os produtos — imagens quebradas | Média |
+| Backend `push/services.py` | Métodos `send_*` são stubs (`pass`) | Pendente (ver Prioridade 3) |
 
 ---
 
@@ -252,6 +251,10 @@ Para cada `ORDER_ITEM`:
 - **2026-04-19** — Nutrição: ranking é SQL puro. LLM só pra formatar mensagem em PT-BR
 - **2026-04-29** — Auth: optado por JWT próprio (passlib/bcrypt já instalado) em vez de Firebase/Supabase para simplificar o setup universitário
 - **2026-04-29** — Modelo Claude padrão atualizado para `claude-sonnet-4-6`
+- **2026-05-01** — Migration Alembic inicial gerada e aplicada (`465e0bbebea4`); backend deixou de depender de `create_all()` no seed
+- **2026-05-01** — Endpoints de IA (`grill-advisor`, `label-scanner`, `nutrition-ranking`) implementados com Claude Vision; telas mobile correspondentes integradas
+- **2026-05-02** — Auth persistente concluído: token JWT salvo em AsyncStorage com chave `@portal_churras:token`, restauração de sessão via `getMe()` no boot
+- **2026-05-02** — `CLAUDE_API_KEY` placeholder agora é tratado como "não configurado" (endpoints devolvem 503 limpo em vez de 500 com stack trace)
 
 ---
 
@@ -261,5 +264,7 @@ Para cada `ORDER_ITEM`:
 - Preços em centavos é regra absoluta. Se ver `price: "29,00"` ou `price: 29.0`, refatorar para int
 - Antes de criar tabela nova, verificar se cabe numa entidade existente
 - Ao adicionar um novo domain com models, adicionar o import em `backend/app/main.py`
+- Mudanças de schema **sempre** via Alembic (`alembic revision --autogenerate -m "..."` + `alembic upgrade head`); não usar `Base.metadata.create_all()` em produção
 - No mobile, usar sempre `Alert.alert` (react-native), nunca `confirm()` ou `alert()` global
+- Nas funções de IA (`ai_core/services.py`), usar o helper `_is_key_configured()` antes de chamar a Claude — ele cobre tanto chave vazia quanto placeholder `your-claude-key`
 - `BottomNavBar.jsx` é código morto — não referenciar nem expandir, apenas deletar quando tocar na área
