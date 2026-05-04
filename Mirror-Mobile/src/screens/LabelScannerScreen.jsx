@@ -14,6 +14,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { analyzeLabelScanner, formatPrice } from "../services/api";
+import WebCameraModal from "../components/WebCameraModal";
 
 const PRIMARY = "#D91C1C";
 const BG = "#FAF5EC";
@@ -22,8 +23,14 @@ export default function LabelScannerScreen({ navigation }) {
   const [image, setImage] = useState(null);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showWebCam, setShowWebCam] = useState(false);
 
   const pickImage = async (source) => {
+    if (source === "camera" && Platform.OS === "web") {
+      setShowWebCam(true);
+      return;
+    }
+
     const options = { allowsEditing: true, quality: 0.8, base64: true };
 
     let scanResult;
@@ -53,12 +60,10 @@ export default function LabelScannerScreen({ navigation }) {
     }
   };
 
-  const handleChooseImage = () => {
-    Alert.alert("Adicionar foto", "Como deseja fotografar o rótulo?", [
-      { text: "Câmera", onPress: () => pickImage("camera") },
-      { text: "Galeria", onPress: () => pickImage("gallery") },
-      { text: "Cancelar", style: "cancel" },
-    ]);
+  const handleWebCapture = (img) => {
+    setImage(img);
+    setShowWebCam(false);
+    setResult(null);
   };
 
   const handleScan = async () => {
@@ -77,6 +82,12 @@ export default function LabelScannerScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.container}>
+      <WebCameraModal
+        visible={showWebCam}
+        onCapture={handleWebCapture}
+        onClose={() => setShowWebCam(false)}
+      />
+
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color="#2A1E14" />
@@ -89,33 +100,51 @@ export default function LabelScannerScreen({ navigation }) {
           Fotografe o rótulo nutricional de um lanche concorrente e encontre o equivalente no Portal do Churras
         </Text>
 
-        <TouchableOpacity style={styles.imageArea} onPress={handleChooseImage} activeOpacity={0.8}>
-          {image ? (
+        {image ? (
+          <View style={styles.imageArea}>
             <Image source={{ uri: image.uri }} style={styles.imagePreview} resizeMode="cover" />
-          ) : (
-            <View style={styles.imagePlaceholder}>
-              <Ionicons name="scan" size={48} color="#B8A898" />
-              <Text style={styles.imagePlaceholderText}>Toque para fotografar o rótulo</Text>
-            </View>
-          )}
-        </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.imagePlaceholder}>
+            <Ionicons name="scan" size={48} color="#B8A898" />
+            <Text style={styles.imagePlaceholderText}>Adicione uma foto do rótulo</Text>
+          </View>
+        )}
+
+        {!image && (
+          <View style={styles.pickRow}>
+            <TouchableOpacity style={styles.pickBtn} onPress={() => pickImage("camera")} activeOpacity={0.8}>
+              <Ionicons name="camera-outline" size={20} color={PRIMARY} />
+              <Text style={styles.pickBtnText}>Câmera</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.pickBtn} onPress={() => pickImage("gallery")} activeOpacity={0.8}>
+              <Ionicons name="images-outline" size={20} color={PRIMARY} />
+              <Text style={styles.pickBtnText}>Galeria</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {image && !result && (
-          <TouchableOpacity
-            style={[styles.scanBtn, loading && { opacity: 0.7 }]}
-            onPress={handleScan}
-            disabled={loading}
-            activeOpacity={0.85}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <>
-                <Ionicons name="search" size={20} color="#fff" style={{ marginRight: 8 }} />
-                <Text style={styles.scanBtnText}>Analisar rótulo</Text>
-              </>
-            )}
-          </TouchableOpacity>
+          <>
+            <TouchableOpacity
+              style={[styles.scanBtn, loading && { opacity: 0.7 }]}
+              onPress={handleScan}
+              disabled={loading}
+              activeOpacity={0.85}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <>
+                  <Ionicons name="search" size={20} color="#fff" style={{ marginRight: 8 }} />
+                  <Text style={styles.scanBtnText}>Analisar rótulo</Text>
+                </>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.changePhotoBtn} onPress={() => setImage(null)}>
+              <Text style={styles.changePhotoText}>Trocar foto</Text>
+            </TouchableOpacity>
+          </>
         )}
 
         {loading && (
@@ -190,14 +219,43 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: 2,
     borderColor: "#E8DFD1",
-    borderStyle: "dashed",
     backgroundColor: "#fff",
     height: 260,
-    marginBottom: 20,
+    marginBottom: 16,
   },
   imagePreview: { width: "100%", height: "100%" },
-  imagePlaceholder: { flex: 1, justifyContent: "center", alignItems: "center", gap: 12 },
+  imagePlaceholder: {
+    height: 200,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 16,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: "#E8DFD1",
+    borderStyle: "dashed",
+    backgroundColor: "#fff",
+  },
   imagePlaceholderText: { fontSize: 14, color: "#B8A898" },
+
+  pickRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 20,
+  },
+  pickBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: PRIMARY,
+    backgroundColor: "#fff",
+  },
+  pickBtnText: { fontSize: 15, fontWeight: "600", color: PRIMARY },
 
   scanBtn: {
     backgroundColor: PRIMARY,
@@ -206,7 +264,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 10,
     shadowColor: PRIMARY,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
@@ -214,6 +272,8 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   scanBtnText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  changePhotoBtn: { alignItems: "center", marginBottom: 12 },
+  changePhotoText: { fontSize: 13, color: "#7A6A56" },
   loadingHint: { textAlign: "center", color: "#7A6A56", fontSize: 13, marginBottom: 16 },
 
   resultCard: {
