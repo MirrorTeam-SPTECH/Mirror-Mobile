@@ -12,6 +12,7 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
+import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import { getTopProduct } from "../services/api";
 
@@ -48,15 +49,25 @@ function formatDistance(meters) {
 }
 
 function TopBarHeader() {
+  const nav = useNavigation();
   return (
     <View style={styles.topBar}>
-      <Text style={styles.topLabel}>Portal do Churras</Text>
-      <Text style={styles.topTitle}>Perto de você</Text>
+      <TouchableOpacity
+        onPress={() => nav.goBack()}
+        style={styles.backBtn}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      >
+        <Ionicons name="chevron-back" size={26} color={INK} />
+      </TouchableOpacity>
+      <View style={styles.topBarText}>
+        <Text style={styles.topLabel}>Portal do Churras</Text>
+        <Text style={styles.topTitle}>Perto de você</Text>
+      </View>
     </View>
   );
 }
 
-export default function ProximityScreen() {
+export default function ProximityScreen({ navigation }) {
   const { isLoggedIn } = useAuth();
   const [status, setStatus]       = useState("idle");
   const [distance, setDistance]   = useState(null);
@@ -246,9 +257,22 @@ export default function ProximityScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: BG },
   topBar: {
+    flexDirection: "row",
+    alignItems: "flex-end",
     paddingTop: Platform.OS === "android" ? 44 : 18,
-    paddingHorizontal: 20,
+    paddingHorizontal: 12,
     paddingBottom: 8,
+    gap: 4,
+  },
+  backBtn: {
+    padding: 4,
+    marginBottom: 2,
+  },
+  backPlaceholder: {
+    width: 34,
+  },
+  topBarText: {
+    flex: 1,
   },
   topLabel: {
     fontSize: 11,

@@ -172,3 +172,22 @@ class PayPreferenceResponse(BaseModel):
     init_point: str
     sandbox_init_point: str
     preference_id: str
+
+
+# ============================================================================
+# Loyalty Schemas
+# ============================================================================
+
+class LoyaltyStampItem(BaseModel):
+    order_id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class LoyaltyResponse(BaseModel):
+    total_stamps: int
+    stamps_in_cycle: int
+    cycles_completed: int
+    recent_stamps: list[LoyaltyStampItem] = []

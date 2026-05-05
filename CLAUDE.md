@@ -44,8 +44,9 @@ Dados e integrações
 
 1. **Pedidos**: escolher lanche → customizar (opções pré-definidas) → pagar (MP) → acompanhar → favoritar → histórico
 2. **Geolocalização**: alerta quando o cliente está perto do food truck (300 m); sugestão do "lanche de sempre" baseada no produto mais pedido — **implementado**
-3. **Churrasqueiro de bolso**: imagem + áudio → Claude analisa ponto da carne e qualidade do corte
-4. **Scanner comparativo**: OCR do rótulo de um lanche concorrente → sugestão de equivalente do Portal do Churras
+3. **Fidelidade**: cartão de selos (10 hambúrgueres = 1 combo grátis); só pedidos com ≥1 hambúrguer contam; bebidas/acompanhamentos sozinhos não contam — **implementado**
+4. **Churrasqueiro de bolso**: imagem + áudio → Claude analisa ponto da carne e qualidade do corte
+5. **Scanner comparativo**: OCR do rótulo de um lanche concorrente → sugestão de equivalente do Portal do Churras
 
 ---
 
@@ -96,7 +97,7 @@ Todas as telas novas seguem este padrão (não misturar com estilos antigos `#f5
 </SafeAreaView>
 ```
 
-Telas que já seguem este padrão: `HomeScreen`, `ProfileScreen`, `ProximityScreen`, `ProductCard`, `SearchBar`, `CategoryFilter`, `TopBar`.
+Telas que já seguem este padrão: `HomeScreen`, `ProfileScreen`, `ProximityScreen`, `FavoritesScreen`, `LoyaltyScreen`, `ProductCard`, `SearchBar`, `CategoryFilter`, `TopBar`.
 
 ---
 
@@ -168,6 +169,7 @@ Para cada `ORDER_ITEM`:
 - [x] `POST /api/label-scanner` — implementado (Claude Vision: OCR rótulo + sugestão de equivalente)
 - [x] Endpoints de IA devolvem **HTTP 503** quando `CLAUDE_API_KEY` é vazia ou placeholder (`your-claude-key`)
 - [x] `GET /api/orders/top-product` — funcionando (produto mais pedido pelo usuário via `SUM(quantity)`; retorna `{ product_id, name, total_quantity }`; **deve ficar antes de `/{order_id}` no routes.py** para evitar colisão de path)
+- [x] `GET /api/loyalty` — funcionando (selos de fidelidade: filtra ordens não canceladas com ≥1 item da categoria "Hambúrgueres"; retorna `total_stamps`, `stamps_in_cycle`, `cycles_completed`, `recent_stamps`; schemas `LoyaltyStampItem` + `LoyaltyResponse` em `schemas.py`)
 - [ ] `CLAUDE_API_KEY` ainda é placeholder no `.env` (precisa de chave real para os endpoints de IA funcionarem)
 - [ ] Push: nenhuma integração
 
@@ -184,10 +186,14 @@ Para cada `ORDER_ITEM`:
 - [x] GrillAdvisorScreen integrada com `/grill-advisor` — câmera + galeria; webcam real no browser via `WebCameraModal.web.jsx`
 - [x] LabelScannerScreen integrada com `/label-scanner` — câmera + galeria; webcam real no browser via `WebCameraModal.web.jsx`
 - [x] `WebCameraModal.web.jsx` — modal de webcam para Expo Web usando `getUserMedia` + `ReactDOM.createPortal`; stub native em `WebCameraModal.jsx`
-- [x] **ProfileScreen** redesenhada no sistema de design novo (cream/serif/Ionicons/cards com borda `LINE`); mantém todas as navegações: OrderHistory, Favorites, GrillAdvisor, LabelScanner, logout
+- [x] **ProfileScreen** redesenhada no sistema de design novo (cream/serif/Ionicons/cards com borda `LINE`); menu: Meus Pedidos (OrderHistory), Perto de Você (Nearby via Stack), Churrasqueiro de Bolso (GrillAdvisor), Scanner Comparativo (LabelScanner), logout
 - [x] **CartScreen**: botão `←` no header (volta para `HomeTab`); tab bar oculta via `options={{ tabBarStyle: { display: "none" } }}` para não cobrir o botão "Finalizar Pedido"
-- [x] **ProximityScreen**: geolocalização real via `expo-location`; distância calculada por Haversine (linha reta); raio de alerta: 300 m; food truck: Rua Domingos Giglio 81, Pirituba SP (-23.481362, -46.711614); exibe produto mais pedido (`/top-product`) quando perto; exibe endereço do food truck sempre; tab "Nearby" com ícone `map-marker-outline`
-- [x] **Sistema de imagens locais**: `assets/images/` + `src/services/productImages.js` (mapeamento `id → require()`); X-Salada (id=1) com imagem `x-salada.jpeg`; `ProductCard` usa imagem local quando disponível, placeholder colorido quando não
+- [x] **ProximityScreen**: geolocalização real via `expo-location`; distância calculada por Haversine (linha reta); raio de alerta: 300 m; food truck: Rua Domingos Giglio 81, Pirituba SP (-23.481362, -46.711614); exibe produto mais pedido (`/top-product`) quando perto; exibe endereço do food truck sempre; **acessível apenas como Stack screen** (via ProfileScreen "Perto de Você") — não está mais na tab bar; botão voltar via `useNavigation()`
+- [x] **LoyaltyScreen**: cartão de selos (10 bolinhas — vermelha com ✓ se preenchida, branca com número se vazia); banner dourado quando `cycles_completed > 0`; lista dos últimos 10 carimbos; regra visível ("só hambúrguer conta"); `getLoyalty()` em `api.js`; tab "Loyalty" com ícone `star-outline`; botão voltar via `useNavigation()`
+- [x] **FavoritesScreen**: redesenhada no sistema de design novo (cream/serif/Ionicons, cards com borda `LINE`, imagem local via `PRODUCT_IMAGES`); botão voltar via `useNavigation()`; substituiu estilos legados `#f5f5f5`/`#333`
+- [x] **Tab bar**: 5 tabs — HomeTab, **Loyalty** (estrela), Orders (carrinho), Favorites (coração), ProfileTab
+- [x] **Botões de voltar**: padrão `useNavigation()` + `navigation.goBack()` em todas as telas secundárias (ProximityScreen, LoyaltyScreen, FavoritesScreen). **Não usar `canGoBack()` fora do `onPress`** — avaliado no momento do clique, não no render
+- [x] **Sistema de imagens locais**: `assets/images/` + `src/services/productImages.js` (mapeamento `id → require()`); X-Salada (id=1) com imagem `x-salada.jpeg`; `ProductCard` e `FavoritesScreen` usam imagem local quando disponível, placeholder colorido quando não
 - [x] `api.js` lê URL via `process.env.EXPO_PUBLIC_API_URL` com fallback `http://localhost:8000/api`
 - [ ] SearchBar ainda visual apenas (sem `onChangeText`/state)
 - [ ] Imagens de produtos: 12/13 produtos ainda sem imagem (apenas X-Salada tem)
@@ -206,6 +212,7 @@ Para cada `ORDER_ITEM`:
 4. SearchBar funcional: state + filtragem de produtos no `ProductsContext`
 5. Imagens de produtos: adicionar fotos reais dos 12 produtos restantes em `assets/images/` e mapear em `productImages.js`
 6. Deletar `BottomNavBar.jsx` (código morto, substituído pelo Tab Navigator)
+7. Migrar estilos legados de `CartScreen.jsx` e `CheckoutScreen.jsx` para o sistema de design novo
 
 ### Prioridade 3 — Push Notifications
 7. Adicionar `expo-notifications` no `package.json`
@@ -235,6 +242,7 @@ Para cada `ORDER_ITEM`:
 - **Imagens de produtos**: usar assets locais via `require()` em `src/services/productImages.js`. **O arquivo de imagem deve existir em `assets/images/` antes de adicionar o `require()` e iniciar o Metro** — caso contrário o bundler falha com 500. Nunca hotlink externo
 - **Design system**: usar sempre os tokens do sistema de design novo (ver seção "Sistema de design"). Não criar novas telas com `backgroundColor: "#f5f5f5"` ou `color: "#333"` — usar `BG`, `INK`, `PRIMARY`, etc.
 - **Estilos legados**: `#C41E3A` (accent antigo) ainda aparece em CartScreen/CheckoutScreen — ao tocar nessas telas, migrar para o sistema novo
+- **Botão de voltar**: usar `useNavigation()` do `@react-navigation/native` em componentes auxiliares (ex: `TopBar`). Chamar `navigation.goBack()` dentro do `onPress` — nunca avaliar `canGoBack()` fora do handler, pois no render inicial pode retornar `false` mesmo com pilha válida
 
 ### Backend (FastAPI / Python)
 
@@ -267,6 +275,7 @@ Para cada `ORDER_ITEM`:
 | `BottomNavBar.jsx` | Componente morto (não importado em lugar nenhum) — deletar | Baixa |
 | Backend `push/services.py` | Métodos `send_*` são stubs (`pass`) | Pendente (ver Prioridade 3) |
 | `CartScreen.jsx` / `CheckoutScreen.jsx` | Estilos legados (`#f5f5f5`, `#C41E3A`, `#333`) — migrar para o sistema de design novo quando tocar nessas telas | Baixa |
+| `backend/app/domains/orders/` | `GET /loyalty` não tem migration Alembic pois só lê tabelas existentes, mas se mudar schema no futuro precisa versionar | Nota |
 
 ---
 
@@ -300,6 +309,9 @@ Para cada `ORDER_ITEM`:
 - **2026-05-05** — Tab "Search" (sem funcionalidade) substituída por "Nearby" (`ProximityScreen`) com geolocalização real via `expo-location`
 - **2026-05-05** — Distância ao food truck calculada por Haversine (linha reta). Difere da rota real do Google Maps (estradas) — esperado e correto para a funcionalidade de proximidade
 - **2026-05-05** — CartScreen: tab bar oculta via `tabBarStyle: { display: "none" }` para não sobrepor o botão "Finalizar Pedido"; botão voltar (`←`) adicionado ao header
+- **2026-05-05** — Fidelidade: `LoyaltyScreen` implementada com cartão de 10 selos; 10 hambúrgueres = 1 combo grátis; bebidas/acompanhamentos não contam; backend `GET /api/loyalty` filtra por categoria "Hambúrgueres" com `.ilike()`; tab bar substituiu "Nearby" por "Loyalty" (ícone `star-outline`); `ProximityScreen` movida para Stack (acessível via ProfileScreen)
+- **2026-05-05** — FavoritesScreen redesenhada no sistema de design novo (cream/serif/cards com borda LINE, imagens locais via PRODUCT_IMAGES); eliminou últimos estilos legados da tela
+- **2026-05-05** — Botões de voltar: padrão consolidado em `useNavigation()` + `goBack()` dentro do `onPress`. Bug corrigido: `canGoBack()` avaliado no render retornava `false` antes da pilha estar montada — movido para dentro do handler resolve o problema
 
 ---
 
@@ -314,5 +326,6 @@ Para cada `ORDER_ITEM`:
 - Nas funções de IA (`ai_core/services.py`), usar o helper `_is_key_configured()` antes de chamar a Claude — ele cobre tanto chave vazia quanto placeholder `your-claude-key`
 - `BottomNavBar.jsx` é código morto — não referenciar nem expandir, apenas deletar quando tocar na área
 - **Imagens locais**: antes de adicionar `require()` em `productImages.js`, confirmar que o arquivo existe em `assets/images/`. Nunca descomentar um `require()` sem o arquivo correspondente — o Metro bundler falha com 500 em build time
-- **Rotas FastAPI**: sempre declarar rotas com path literal (ex: `/orders/top-product`) antes de rotas com path parameter (ex: `/orders/{order_id}`) no mesmo router
+- **Rotas FastAPI**: sempre declarar rotas com path literal (ex: `/orders/top-product`, `/loyalty`) antes de rotas com path parameter (ex: `/orders/{order_id}`) no mesmo router
 - **Novo pacote Expo nativo** (ex: `expo-location`, `expo-notifications`): instalar com `npx expo install <pacote>` (não `npm install`). Após instalar, reiniciar Metro com `npx expo start --clear` para limpar cache
+- **`useNavigation()` vs prop drilling**: para componentes auxiliares dentro de telas (ex: `TopBar`, `TopBarHeader`), usar `useNavigation()` do `@react-navigation/native` em vez de receber `navigation` por prop — evita `undefined` quando o contexto não repassa a prop corretamente

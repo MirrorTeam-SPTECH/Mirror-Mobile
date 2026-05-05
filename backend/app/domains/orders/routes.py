@@ -20,6 +20,8 @@ from app.domains.orders.schemas import (
     OrderListResponse,
     TopProductResponse,
     PayPreferenceResponse,
+    LoyaltyStampItem,
+    LoyaltyResponse,
 )
 from app.domains.orders.repository import OrderRepository
 
@@ -176,6 +178,49 @@ def get_top_product(
         product_id=row.product_id,
         name=row.name_snapshot,
         total_quantity=row.total_quantity,
+    )
+
+
+@router.get("/loyalty", response_model=LoyaltyResponse)
+def get_loyalty(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    burger_category = db.query(Category).filter(
+        Category.name.ilike("hambúrgueres")
+    ).first()
+
+    if not burger_category:
+        return LoyaltyResponse(total_stamps=0, stamps_in_cycle=0, cycles_completed=0)
+
+    qualifying = (
+        db.query(Order)
+        .join(OrderItem, OrderItem.order_id == Order.id)
+        .join(Product, Product.id == OrderItem.product_id)
+        .filter(
+            Order.user_id == current_user.id,
+            Order.status != OrderStatus.CANCELLED,
+            Product.category_id == burger_category.id,
+        )
+        .distinct()
+        .order_by(Order.created_at.desc())
+        .all()
+    )
+
+    total_stamps = len(qualifying)
+    stamps_in_cycle = total_stamps % 10
+    cycles_completed = total_stamps // 10
+
+    recent_stamps = [
+        LoyaltyStampItem(order_id=o.id, created_at=o.created_at)
+        for o in qualifying[:10]
+    ]
+
+    return LoyaltyResponse(
+        total_stamps=total_stamps,
+        stamps_in_cycle=stamps_in_cycle,
+        cycles_completed=cycles_completed,
+        recent_stamps=recent_stamps,
     )
 
 

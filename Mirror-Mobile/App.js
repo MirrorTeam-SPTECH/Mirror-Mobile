@@ -22,6 +22,7 @@ import OrderHistoryScreen from "./src/screens/OrderHistoryScreen";
 import GrillAdvisorScreen from "./src/screens/GrillAdvisorScreen";
 import LabelScannerScreen from "./src/screens/LabelScannerScreen";
 import ProximityScreen from "./src/screens/ProximityScreen";
+import LoyaltyScreen from "./src/screens/LoyaltyScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -40,8 +41,8 @@ function MainTabs() {
 
           if (route.name === "HomeTab") {
             iconName = "home";
-          } else if (route.name === "Nearby") {
-            iconName = "map-marker-outline";
+          } else if (route.name === "Loyalty") {
+            iconName = "star-outline";
           } else if (route.name === "Orders") {
             iconName = "cart";
           } else if (route.name === "Favorites") {
@@ -72,7 +73,7 @@ function MainTabs() {
       })}
     >
       <Tab.Screen name="HomeTab" component={HomeScreen} />
-      <Tab.Screen name="Nearby" component={ProximityScreen} />
+      <Tab.Screen name="Loyalty" component={LoyaltyScreen} />
       <Tab.Screen
         name="Orders"
         component={CartScreen}
@@ -111,6 +112,9 @@ export default function App() {
 
   useEffect(() => {
     const checkOnboarding = async () => {
+      if (__DEV__) {
+        await AsyncStorage.removeItem("hasSeenOnboarding");
+      }
       const hasSeenOnboarding = await AsyncStorage.getItem("hasSeenOnboarding");
       setInitialRoute(hasSeenOnboarding === "true" ? "Login" : "Onboarding");
     };
@@ -141,6 +145,7 @@ export default function App() {
                 <Stack.Screen name="OrderHistory" component={OrderHistoryScreen} />
                 <Stack.Screen name="GrillAdvisor" component={GrillAdvisorScreen} />
                 <Stack.Screen name="LabelScanner" component={LabelScannerScreen} />
+                <Stack.Screen name="Nearby" component={ProximityScreen} />
               </Stack.Navigator>
             </NavigationContainer>
           </CartProvider>

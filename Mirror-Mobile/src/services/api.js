@@ -114,6 +114,10 @@ export async function getTopProduct() {
   return fetchAPI('/orders/top-product');
 }
 
+export async function getLoyalty() {
+  return fetchAPI('/loyalty');
+}
+
 export async function getOrderById(orderId) {
   return fetchAPI(`/orders/${orderId}`);
 }

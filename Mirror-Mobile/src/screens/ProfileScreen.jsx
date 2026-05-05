@@ -21,10 +21,10 @@ const MUTED = "#7A6A56";
 const SERIF = Platform.select({ ios: "Georgia", android: "serif", default: "Georgia" });
 
 const MENU_ITEMS = [
-  { key: "orders",    label: "Meus Pedidos",           icon: "receipt-outline",  screen: "OrderHistory" },
-  { key: "favorites", label: "Favoritos",               icon: "heart-outline",    screen: "Favorites"    },
-  { key: "grill",     label: "Churrasqueiro de Bolso",  icon: "flame-outline",    screen: "GrillAdvisor" },
-  { key: "scanner",   label: "Scanner Comparativo",     icon: "scan-outline",     screen: "LabelScanner" },
+  { key: "orders",    label: "Meus Pedidos",           icon: "receipt-outline",      screen: "OrderHistory" },
+  { key: "nearby",    label: "Perto de Você",           icon: "location-outline",     screen: "Nearby"       },
+  { key: "grill",     label: "Churrasqueiro de Bolso",  icon: "flame-outline",        screen: "GrillAdvisor" },
+  { key: "scanner",   label: "Scanner Comparativo",     icon: "scan-outline",         screen: "LabelScanner" },
 ];
 
 export default function ProfileScreen({ navigation }) {
