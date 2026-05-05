@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import { Ionicons } from "@expo/vector-icons";
 import { getOrderById, formatPrice } from "../services/api";
 
 const STATUS_LABEL = {
@@ -91,6 +92,9 @@ export default function OrderTrackingScreen({ route, navigation }) {
       <StatusBar style="auto" />
 
       <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <Ionicons name="chevron-back" size={26} color="#333" />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Acompanhar Pedido</Text>
         <Text style={styles.orderId}>#{order.id}</Text>
       </View>

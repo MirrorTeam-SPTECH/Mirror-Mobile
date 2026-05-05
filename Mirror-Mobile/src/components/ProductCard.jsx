@@ -31,7 +31,7 @@ export default function ProductCard({ product }) {
       {/* Image / placeholder */}
       <View style={[styles.imageArea, { backgroundColor: bgColor }]}>
         {localImage && (
-          <Image source={localImage} style={StyleSheet.absoluteFill} resizeMode="cover" />
+          <Image source={localImage} style={styles.productImage} resizeMode="cover" />
         )}
         <View style={styles.imageOverlay} />
 
@@ -81,9 +81,14 @@ const styles = StyleSheet.create({
   },
   imageArea: {
     height: 96,
-    position: "relative",
-    justifyContent: "flex-end",
     overflow: "hidden",
+  },
+  productImage: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: 96,
   },
   imageOverlay: {
     ...StyleSheet.absoluteFillObject,

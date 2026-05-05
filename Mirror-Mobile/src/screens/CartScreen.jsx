@@ -11,6 +11,12 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { useCart } from "../context/CartContext";
 import { formatPrice } from "../services/api";
+import { PRODUCT_IMAGES } from "../services/productImages";
+
+const PLACEHOLDER_COLORS = [
+  "#5C2A18", "#7A3318", "#8A4426", "#C97D3F",
+  "#6B2818", "#D4A258", "#8B2E1A", "#C05F3A",
+];
 
 export default function CartScreen({ navigation }) {
   const {
@@ -94,10 +100,19 @@ export default function CartScreen({ navigation }) {
         {/* Cart Items */}
         {cart.map((item) => (
           <View key={item.cartItemId} style={styles.cartItem}>
-            <Image
-              source={{ uri: item.imageUrl }}
-              style={styles.itemImage}
-            />
+            <View style={styles.itemImageWrap}>
+              {PRODUCT_IMAGES[item.productId] ? (
+                <Image
+                  source={PRODUCT_IMAGES[item.productId]}
+                  style={styles.itemImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View style={[styles.itemImage, { backgroundColor: PLACEHOLDER_COLORS[item.productId % PLACEHOLDER_COLORS.length], alignItems: "center", justifyContent: "center" }]}>
+                  <Text style={{ fontSize: 28 }}>🍔</Text>
+                </View>
+              )}
+            </View>
             <View style={styles.itemDetails}>
               <Text style={styles.itemName}>{item.productName}</Text>
 
@@ -252,11 +267,16 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     position: "relative",
   },
-  itemImage: {
+  itemImageWrap: {
     width: 80,
     height: 80,
     borderRadius: 8,
     marginRight: 15,
+    overflow: "hidden",
+  },
+  itemImage: {
+    width: 80,
+    height: 80,
   },
   itemDetails: {
     flex: 1,

@@ -61,6 +61,7 @@ export default function BottomNavBar() {
 const styles = StyleSheet.create({
   container: {
     width: "90%",
+    heigth: 40,
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",

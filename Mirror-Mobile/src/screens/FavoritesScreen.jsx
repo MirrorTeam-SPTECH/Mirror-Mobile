@@ -37,7 +37,7 @@ function FavoriteCard({ product }) {
     >
       <View style={styles.imageWrap}>
         {localImage ? (
-          <Image source={localImage} style={StyleSheet.absoluteFill} resizeMode="cover" />
+          <Image source={localImage} style={styles.productImage} resizeMode="cover" />
         ) : (
           <View style={[StyleSheet.absoluteFill, styles.imagePlaceholder]}>
             <Ionicons name="fast-food-outline" size={26} color={SUBTLE} />
@@ -180,6 +180,10 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
+  },
+  productImage: {
+    width: 88,
+    height: 88,
   },
   imagePlaceholder: {
     alignItems: "center",
