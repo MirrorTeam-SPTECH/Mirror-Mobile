@@ -14,7 +14,7 @@ const tabs = [
 
 export default function BottomNavBar() {
   const [activeTab, setActiveTab] = useState(1);
-  const navigation = useNavigation();
+  const navigation = useNavparigation();
   const { isLoggedIn } = useAuth();
 
   const handleTabPress = (tab) => {

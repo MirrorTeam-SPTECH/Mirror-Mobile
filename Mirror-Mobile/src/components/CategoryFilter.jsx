@@ -1,12 +1,10 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-} from "react-native";
 import React from "react";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from "react-native";
 import { useProducts } from "../context/ProductsContext";
+
+const PRIMARY = "#D91C1C";
+const INK = "#2A1E14";
+const LINE = "#E8DFD1";
 
 export default function CategoryFilter() {
   const { categories, selectedCategory, setSelectedCategory } = useProducts();
@@ -18,49 +16,25 @@ export default function CategoryFilter() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* "Todos" button to show all products */}
         <TouchableOpacity
-          style={[
-            styles.button,
-            selectedCategory === null
-              ? styles.buttonActive
-              : styles.buttonInactive,
-          ]}
+          style={[styles.pill, selectedCategory === null && styles.pillActive]}
           onPress={() => setSelectedCategory(null)}
+          activeOpacity={0.8}
         >
-          <Text
-            style={[
-              styles.buttonText,
-              selectedCategory === null
-                ? styles.textActive
-                : styles.textInactive,
-            ]}
-          >
-            Todos
+          <Text style={[styles.pillText, selectedCategory === null && styles.pillTextActive]}>
+            Tudo
           </Text>
         </TouchableOpacity>
 
-        {/* Category buttons from API */}
-        {categories.map((category) => (
+        {categories.map((cat) => (
           <TouchableOpacity
-            key={category.id}
-            style={[
-              styles.button,
-              selectedCategory === category.id
-                ? styles.buttonActive
-                : styles.buttonInactive,
-            ]}
-            onPress={() => setSelectedCategory(category.id)}
+            key={cat.id}
+            style={[styles.pill, selectedCategory === cat.id && styles.pillActive]}
+            onPress={() => setSelectedCategory(cat.id)}
+            activeOpacity={0.8}
           >
-            <Text
-              style={[
-                styles.buttonText,
-                selectedCategory === category.id
-                  ? styles.textActive
-                  : styles.textInactive,
-              ]}
-            >
-              {category.name}
+            <Text style={[styles.pillText, selectedCategory === cat.id && styles.pillTextActive]}>
+              {cat.name}
             </Text>
           </TouchableOpacity>
         ))}
@@ -70,39 +44,27 @@ export default function CategoryFilter() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    marginTop: 25,
-    paddingLeft: 15,
-    width: "100%",
-    justifyContent: "center",
-    alignContent: "center",
+  container: { marginBottom: 16 },
+  scrollContent: { paddingHorizontal: 20, gap: 8 },
+  pill: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: LINE,
+    backgroundColor: "#fff",
   },
-  scrollContent: {
-    paddingRight: 15,
-    gap: 10,
+  pillActive: {
+    backgroundColor: PRIMARY,
+    borderColor: PRIMARY,
   },
-  button: {
-    paddingVertical: 9,
-    paddingHorizontal: 19,
-    borderRadius: 6,
-    borderWidth: 1.5,
-  },
-  buttonActive: {
-    backgroundColor: "#C41E3A",
-    borderColor: "#C41E3A",
-  },
-  buttonInactive: {
-    backgroundColor: "transparent",
-    borderColor: "#C41E3A",
-  },
-  buttonText: {
-    fontSize: 14,
+  pillText: {
+    fontSize: 13,
     fontWeight: "500",
+    color: INK,
   },
-  textActive: {
+  pillTextActive: {
     color: "#fff",
-  },
-  textInactive: {
-    color: "#C41E3A",
+    fontWeight: "600",
   },
 });

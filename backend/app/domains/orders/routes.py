@@ -4,12 +4,13 @@ from sqlalchemy.orm import Session, joinedload
 from typing import Optional
 
 import mercadopago
+from sqlalchemy import func
 
 from app.config import settings
 from app.database import get_db
 from app.auth import get_current_user
 from app.domains.users.models import User
-from app.domains.orders.models import Category, Product, OptionGroup, Option, OrderStatus, Favorite
+from app.domains.orders.models import Category, Product, OptionGroup, Option, OrderStatus, Favorite, Order, OrderItem
 from app.domains.orders.schemas import (
     CategoryResponse,
     ProductListResponse,
@@ -17,6 +18,7 @@ from app.domains.orders.schemas import (
     OrderCreate,
     OrderResponse,
     OrderListResponse,
+    TopProductResponse,
     PayPreferenceResponse,
 )
 from app.domains.orders.repository import OrderRepository
@@ -149,6 +151,32 @@ def list_orders(
 ):
     repo = OrderRepository(db)
     return repo.get_by_user(current_user.id)
+
+
+@router.get("/orders/top-product", response_model=TopProductResponse)
+def get_top_product(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    row = (
+        db.query(
+            OrderItem.product_id,
+            OrderItem.name_snapshot,
+            func.sum(OrderItem.quantity).label("total_quantity"),
+        )
+        .join(Order, Order.id == OrderItem.order_id)
+        .filter(Order.user_id == current_user.id)
+        .group_by(OrderItem.product_id, OrderItem.name_snapshot)
+        .order_by(func.sum(OrderItem.quantity).desc())
+        .first()
+    )
+    if not row:
+        raise HTTPException(status_code=404, detail="Nenhum pedido encontrado")
+    return TopProductResponse(
+        product_id=row.product_id,
+        name=row.name_snapshot,
+        total_quantity=row.total_quantity,
+    )
 
 
 @router.get("/orders/{order_id}", response_model=OrderResponse)

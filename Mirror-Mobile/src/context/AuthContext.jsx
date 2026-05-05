@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { login as loginAPI, register as registerAPI, getMe, setAuthToken, clearAuthToken } from "../services/api";
+import { login as loginAPI, register as registerAPI, getMe, setAuthToken, clearAuthToken, setOnUnauthorized } from "../services/api";
 
 const AuthContext = createContext();
 
@@ -9,6 +9,14 @@ const TOKEN_KEY = "@portal_churras:token";
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Deslogou automaticamente quando qualquer chamada retornar 401
+  useEffect(() => {
+    setOnUnauthorized(async () => {
+      await AsyncStorage.removeItem(TOKEN_KEY);
+      setUser(null);
+    });
+  }, []);
 
   // Ao abrir o app, restaura sessão salva
   useEffect(() => {

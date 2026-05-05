@@ -7,7 +7,7 @@ Projeto universitário, time pequeno, cliente real.
 
 ## Stack
 
-- **Mobile**: Expo 54 + React Native 0.81.5, React Navigation 7, AsyncStorage, expo-image-picker
+- **Mobile**: Expo 54 + React Native 0.81.5, React Navigation 7, AsyncStorage, expo-image-picker, **expo-location** (instalado via `npx expo install expo-location`)
 - **Backend**: FastAPI 0.109 + SQLAlchemy 2.0 + PostgreSQL 18 + Alembic (migration inicial aplicada)
 - **Data lake**: pipeline Medallion (Bronze → Silver → Gold) sobre PNAE/TACO, já rodando
 - **Auth**: JWT próprio com passlib/bcrypt — **funcionando** (register, login, me, persistência mobile)
@@ -24,7 +24,7 @@ Mobile (Expo/RN)
    │
    ▼  REST/HTTPS
 Backend (FastAPI)
-   ├── Orders service     — catálogo, pedidos, favoritos, MP: tudo OK
+   ├── Orders service     — catálogo, pedidos, favoritos, top-product, MP: tudo OK
    ├── Users service      — register, login (JWT/bcrypt), me: OK
    ├── Nutrition service  — cálculo SQL OK; narrativa Claude OK
    ├── AI core service    — implementado (grill-advisor, label-scanner, nutrition-ranking via Claude Vision)
@@ -43,7 +43,7 @@ Dados e integrações
 ## Features do produto
 
 1. **Pedidos**: escolher lanche → customizar (opções pré-definidas) → pagar (MP) → acompanhar → favoritar → histórico
-2. **Geolocalização**: alerta quando o cliente está perto do food truck; sugestão do "lanche de sempre" em semana de pagamento
+2. **Geolocalização**: alerta quando o cliente está perto do food truck (300 m); sugestão do "lanche de sempre" baseada no produto mais pedido — **implementado**
 3. **Churrasqueiro de bolso**: imagem + áudio → Claude analisa ponto da carne e qualidade do corte
 4. **Scanner comparativo**: OCR do rótulo de um lanche concorrente → sugestão de equivalente do Portal do Churras
 
@@ -65,6 +65,38 @@ Dados e integrações
   Medallion rodando periodicamente.
 - **Offline-first no mobile**: food truck tem internet ruim. Cache do menu e histórico
   em AsyncStorage local.
+
+---
+
+## Sistema de design — Mobile
+
+Todas as telas novas seguem este padrão (não misturar com estilos antigos `#f5f5f5`/`#333`):
+
+| Token | Valor | Uso |
+|-------|-------|-----|
+| `BG` | `#FAF5EC` | Fundo de todas as telas |
+| `INK` | `#2A1E14` | Texto principal |
+| `PRIMARY` | `#D91C1C` | Vermelho — botões, ícones ativos |
+| `SUBTLE` | `#8A7558` | Labels secundários, ícones inativos |
+| `LINE` | `#E8DFD1` | Bordas de cards |
+| `MUTED` | `#7A6A56` | Texto de descrição |
+| `SERIF` | `Platform.select({ ios: "Georgia", android: "serif", default: "Georgia" })` | Títulos e headings |
+
+**Padrão de tela:**
+```jsx
+<SafeAreaView style={{ flex: 1, backgroundColor: "#FAF5EC" }}>
+  <StatusBar style="dark" />
+  <View style={topBar}>           {/* label uppercase + título serif */}
+    <Text style={topLabel}>Portal do Churras</Text>
+    <Text style={topTitle}>Nome da tela</Text>
+  </View>
+  <ScrollView>
+    {/* cards com borderWidth: 1, borderColor: LINE, borderRadius: 14 */}
+  </ScrollView>
+</SafeAreaView>
+```
+
+Telas que já seguem este padrão: `HomeScreen`, `ProfileScreen`, `ProximityScreen`, `ProductCard`, `SearchBar`, `CategoryFilter`, `TopBar`.
 
 ---
 
@@ -116,7 +148,7 @@ Para cada `ORDER_ITEM`:
 
 ---
 
-## Estado atual (2026-05-02)
+## Estado atual (2026-05-05)
 
 ### Backend
 - [x] Estrutura modular por domínio: `orders/`, `users/`, `nutrition/`, `ai_core/`, `push/`
@@ -135,6 +167,7 @@ Para cada `ORDER_ITEM`:
 - [x] `POST /api/grill-advisor` — implementado (Claude Vision: ponto da carne + dica)
 - [x] `POST /api/label-scanner` — implementado (Claude Vision: OCR rótulo + sugestão de equivalente)
 - [x] Endpoints de IA devolvem **HTTP 503** quando `CLAUDE_API_KEY` é vazia ou placeholder (`your-claude-key`)
+- [x] `GET /api/orders/top-product` — funcionando (produto mais pedido pelo usuário via `SUM(quantity)`; retorna `{ product_id, name, total_quantity }`; **deve ficar antes de `/{order_id}` no routes.py** para evitar colisão de path)
 - [ ] `CLAUDE_API_KEY` ainda é placeholder no `.env` (precisa de chave real para os endpoints de IA funcionarem)
 - [ ] Push: nenhuma integração
 
@@ -147,13 +180,17 @@ Para cada `ORDER_ITEM`:
 - [x] OrderHistoryScreen com modal de Nutrition Ranking (chama `/nutrition-ranking`)
 - [x] CartContext, ProductsContext, FavoritesContext (sincronizado com backend)
 - [x] AuthContext com chamadas reais à API + **persistência completa** no AsyncStorage (auto-login funciona)
-- [x] GrillAdvisorScreen integrada com `/grill-advisor` (câmera + galeria via `expo-image-picker`)
-- [x] LabelScannerScreen integrada com `/label-scanner` (câmera + galeria via `expo-image-picker`)
-- [x] ProfileScreen com itens "Churrasqueiro de Bolso" e "Scanner Comparativo"; "Endereços" removido
+- [x] **Auth: auto-logout em qualquer 401** — `api.js` expõe `setOnUnauthorized(callback)`; chamado quando qualquer resposta retorna 401; `AuthContext` registra o callback para limpar token e `setUser(null)` automaticamente
+- [x] GrillAdvisorScreen integrada com `/grill-advisor` — câmera + galeria; webcam real no browser via `WebCameraModal.web.jsx`
+- [x] LabelScannerScreen integrada com `/label-scanner` — câmera + galeria; webcam real no browser via `WebCameraModal.web.jsx`
+- [x] `WebCameraModal.web.jsx` — modal de webcam para Expo Web usando `getUserMedia` + `ReactDOM.createPortal`; stub native em `WebCameraModal.jsx`
+- [x] **ProfileScreen** redesenhada no sistema de design novo (cream/serif/Ionicons/cards com borda `LINE`); mantém todas as navegações: OrderHistory, Favorites, GrillAdvisor, LabelScanner, logout
+- [x] **CartScreen**: botão `←` no header (volta para `HomeTab`); tab bar oculta via `options={{ tabBarStyle: { display: "none" } }}` para não cobrir o botão "Finalizar Pedido"
+- [x] **ProximityScreen**: geolocalização real via `expo-location`; distância calculada por Haversine (linha reta); raio de alerta: 300 m; food truck: Rua Domingos Giglio 81, Pirituba SP (-23.481362, -46.711614); exibe produto mais pedido (`/top-product`) quando perto; exibe endereço do food truck sempre; tab "Nearby" com ícone `map-marker-outline`
+- [x] **Sistema de imagens locais**: `assets/images/` + `src/services/productImages.js` (mapeamento `id → require()`); X-Salada (id=1) com imagem `x-salada.jpeg`; `ProductCard` usa imagem local quando disponível, placeholder colorido quando não
 - [x] `api.js` lê URL via `process.env.EXPO_PUBLIC_API_URL` com fallback `http://localhost:8000/api`
 - [ ] SearchBar ainda visual apenas (sem `onChangeText`/state)
-- [ ] Tab "Search" no `MainTabs` faz `e.preventDefault()` — botão sem ação
-- [ ] Imagens de produtos: `image_url` é null no seed (13/13 produtos sem imagem)
+- [ ] Imagens de produtos: 12/13 produtos ainda sem imagem (apenas X-Salada tem)
 - [ ] Cache offline (AsyncStorage para menu/histórico) — não implementado
 
 ---
@@ -167,23 +204,20 @@ Para cada `ORDER_ITEM`:
 
 ### Prioridade 2 — UX e polish do mobile
 4. SearchBar funcional: state + filtragem de produtos no `ProductsContext`
-5. Tab "Search" no `MainTabs` precisa de tela própria (hoje só `e.preventDefault()`)
-6. Imagens de produtos: popular `image_url` no seed (URLs de CDN/produção, não hotlink)
-7. Deletar `BottomNavBar.jsx` (código morto, substituído pelo Tab Navigator)
+5. Imagens de produtos: adicionar fotos reais dos 12 produtos restantes em `assets/images/` e mapear em `productImages.js`
+6. Deletar `BottomNavBar.jsx` (código morto, substituído pelo Tab Navigator)
 
 ### Prioridade 3 — Push Notifications
-8. Adicionar `expo-notifications` no `package.json`
-9. Setup Expo Push no mobile (permissões, registro de token)
-10. Endpoint backend para registrar token do usuário
-11. Disparar push em transições de status (`paid`, `ready`) no `OrderRepository`
+7. Adicionar `expo-notifications` no `package.json`
+8. Setup Expo Push no mobile (permissões, registro de token)
+9. Endpoint backend para registrar token do usuário
+10. Disparar push em transições de status (`paid`, `ready`) no `OrderRepository`
 
 ### Prioridade 4 — Cache offline
-12. Cachear menu (`/products`, `/categories`) em AsyncStorage com TTL
-13. Cachear `/orders` localmente para histórico funcionar sem rede
+11. Cachear menu (`/products`, `/categories`) em AsyncStorage com TTL
+12. Cachear `/orders` localmente para histórico funcionar sem rede
 
 ### Fases posteriores
-- Geolocalização + alerta de proximidade do food truck
-- Sugestões de "lanche de sempre" em semana de pagamento
 - LGPD: endpoint de exportação e exclusão de dados
 
 ---
@@ -193,13 +227,14 @@ Para cada `ORDER_ITEM`:
 ### Mobile (React Native / Expo)
 
 - **Preços em state/props**: sempre centavos (int). Formatar só na UI com `formatPrice()` de `services/api.js`
-- **Alertas nativos**: usar `Alert.alert` do `react-native`, nunca `confirm()` ou `alert()` do browser
+- **Alertas nativos**: usar `Alert.alert` do `react-native`. **Atenção:** `Alert.alert` com múltiplos botões **não funciona no Expo Web** — o browser ignora a lista de botões. Para seleção de fonte de imagem (câmera vs galeria), usar botões diretos na UI em vez de Alert. Para câmera no web, usar `WebCameraModal` (ver componente).
 - **Favoritos**: `FavoritesContext` — nunca estado local no card
 - **Navegação**: Tab Navigator (`@react-navigation/bottom-tabs`) aninhado em Stack. `BottomNavBar.jsx` é código morto (não usado), pode ser deletado
-- **Auth**: token JWT é persistido em AsyncStorage com chave `@portal_churras:token`. `AuthContext` faz `getMe()` ao abrir o app para restaurar sessão; em caso de erro (401), limpa o token. Sempre usar `useAuth()` em vez de manipular AsyncStorage diretamente
+- **Auth**: token JWT é persistido em AsyncStorage com chave `@portal_churras:token`. `AuthContext` faz `getMe()` ao abrir o app para restaurar sessão; em caso de erro (401), limpa o token. Qualquer resposta 401 em qualquer chamada dispara auto-logout via `setOnUnauthorized`. Sempre usar `useAuth()` em vez de manipular AsyncStorage diretamente
 - **API base URL**: vem de `process.env.EXPO_PUBLIC_API_URL` (definida no `.env` do mobile). Para device físico testando, use o IP da máquina (ex: `EXPO_PUBLIC_API_URL=http://192.168.0.10:8000/api`), não `localhost`
-- **URLs de imagem**: só URLs de produção/CDN. Evitar hotlinks externos
-- **Estilos**: paleta principal — vermelho `#D91C1C` (primary), vinho `#8B1C1C` (primary-dark), `#740000` (cta), `#C41E3A` (accent)
+- **Imagens de produtos**: usar assets locais via `require()` em `src/services/productImages.js`. **O arquivo de imagem deve existir em `assets/images/` antes de adicionar o `require()` e iniciar o Metro** — caso contrário o bundler falha com 500. Nunca hotlink externo
+- **Design system**: usar sempre os tokens do sistema de design novo (ver seção "Sistema de design"). Não criar novas telas com `backgroundColor: "#f5f5f5"` ou `color: "#333"` — usar `BG`, `INK`, `PRIMARY`, etc.
+- **Estilos legados**: `#C41E3A` (accent antigo) ainda aparece em CartScreen/CheckoutScreen — ao tocar nessas telas, migrar para o sistema novo
 
 ### Backend (FastAPI / Python)
 
@@ -211,6 +246,7 @@ Para cada `ORDER_ITEM`:
 - **Logs estruturados** (JSON)
 - **Timezones**: UTC no banco. Converter pra America/Sao_Paulo só na apresentação
 - **Ao importar novos domains com models**, adicionar o import em `main.py` para garantir que SQLAlchemy resolva relacionamentos cross-domain (ex: `Option → Ingredient`)
+- **Rotas com path literal antes de path parameter**: ex. `/orders/top-product` deve ser declarado **antes** de `/orders/{order_id}` no mesmo router, senão FastAPI roteia "top-product" como inteiro e retorna 422
 
 ### Git
 
@@ -225,18 +261,19 @@ Para cada `ORDER_ITEM`:
 | Arquivo | Problema | Prioridade |
 |---------|----------|-----------|
 | `backend/.env` | `CLAUDE_API_KEY=your-claude-key` (placeholder) — endpoints de IA devolvem 503 até trocar pela chave real | Alta |
-| `seed_catalog.py` | `image_url` ausente em todos os produtos (13/13 sem imagem) | Média |
-| `App.js` (MainTabs) | Tab "Search" só faz `e.preventDefault()` — botão clicável sem destino | Média |
+| `backend/.env` | `CORS_ORIGINS=["*"]` — libera todas as origens; ok para dev, restringir antes de produção | Baixa (prod) |
+| `seed_catalog.py` | `image_url` ausente em 12/13 produtos (X-Salada já tem imagem local) | Média |
 | `SearchBar.jsx` | Componente sem `onChangeText`/state — apenas visual | Média |
 | `BottomNavBar.jsx` | Componente morto (não importado em lugar nenhum) — deletar | Baixa |
 | Backend `push/services.py` | Métodos `send_*` são stubs (`pass`) | Pendente (ver Prioridade 3) |
+| `CartScreen.jsx` / `CheckoutScreen.jsx` | Estilos legados (`#f5f5f5`, `#C41E3A`, `#333`) — migrar para o sistema de design novo quando tocar nessas telas | Baixa |
 
 ---
 
 ## Segurança e privacidade
 
 - Dados de cartão **nunca** tocam nosso backend — tokenização pelo SDK do Mercado Pago
-- Geolocalização só com consentimento explícito. No MVP, só em foreground
+- Geolocalização só com consentimento explícito. No MVP, só em foreground (via `requestForegroundPermissionsAsync`)
 - Dados nutricionais são **orientativos** — colocar disclaimer visível sempre que exibir ranking calórico
 - LGPD: prever endpoint de exportação e exclusão de dados do usuário antes do lançamento público
 
@@ -255,6 +292,14 @@ Para cada `ORDER_ITEM`:
 - **2026-05-01** — Endpoints de IA (`grill-advisor`, `label-scanner`, `nutrition-ranking`) implementados com Claude Vision; telas mobile correspondentes integradas
 - **2026-05-02** — Auth persistente concluído: token JWT salvo em AsyncStorage com chave `@portal_churras:token`, restauração de sessão via `getMe()` no boot
 - **2026-05-02** — `CLAUDE_API_KEY` placeholder agora é tratado como "não configurado" (endpoints devolvem 503 limpo em vez de 500 com stack trace)
+- **2026-05-04** — CORS fixado para dev: `CORS_ORIGINS=["*"]` no `backend/.env` (antes estava restrito a 8081/3000, bloqueava Expo Web na 8082+)
+- **2026-05-04** — Câmera no Expo Web: `Alert.alert` com múltiplos botões não funciona no browser; substituído por botões diretos na UI. Webcam real implementada via `getUserMedia` + `ReactDOM.createPortal` em `WebCameraModal.web.jsx` (arquivo platform-specific — `.web.jsx` só carrega no browser, `.jsx` é stub para native)
+- **2026-05-05** — Sistema de design unificado: fundo creme `#FAF5EC`, fonte serif Georgia, tokens `INK/PRIMARY/SUBTLE/LINE`. Aplicado em HomeScreen, ProfileScreen, ProximityScreen, ProductCard, TopBar, SearchBar, CategoryFilter
+- **2026-05-05** — Auth: adicionado mecanismo de auto-logout em qualquer 401 via `setOnUnauthorized` em `api.js`; AuthContext registra o callback no boot
+- **2026-05-05** — Imagens de produtos: opção por assets locais (`require()`) em vez de URLs externas. Arquivo deve existir antes do `require()` ser adicionado ao `productImages.js` — Metro falha com 500 caso contrário. Padrão: arquivo em `assets/images/`, mapeamento em `src/services/productImages.js`
+- **2026-05-05** — Tab "Search" (sem funcionalidade) substituída por "Nearby" (`ProximityScreen`) com geolocalização real via `expo-location`
+- **2026-05-05** — Distância ao food truck calculada por Haversine (linha reta). Difere da rota real do Google Maps (estradas) — esperado e correto para a funcionalidade de proximidade
+- **2026-05-05** — CartScreen: tab bar oculta via `tabBarStyle: { display: "none" }` para não sobrepor o botão "Finalizar Pedido"; botão voltar (`←`) adicionado ao header
 
 ---
 
@@ -268,3 +313,6 @@ Para cada `ORDER_ITEM`:
 - No mobile, usar sempre `Alert.alert` (react-native), nunca `confirm()` ou `alert()` global
 - Nas funções de IA (`ai_core/services.py`), usar o helper `_is_key_configured()` antes de chamar a Claude — ele cobre tanto chave vazia quanto placeholder `your-claude-key`
 - `BottomNavBar.jsx` é código morto — não referenciar nem expandir, apenas deletar quando tocar na área
+- **Imagens locais**: antes de adicionar `require()` em `productImages.js`, confirmar que o arquivo existe em `assets/images/`. Nunca descomentar um `require()` sem o arquivo correspondente — o Metro bundler falha com 500 em build time
+- **Rotas FastAPI**: sempre declarar rotas com path literal (ex: `/orders/top-product`) antes de rotas com path parameter (ex: `/orders/{order_id}`) no mesmo router
+- **Novo pacote Expo nativo** (ex: `expo-location`, `expo-notifications`): instalar com `npx expo install <pacote>` (não `npm install`). Após instalar, reiniciar Metro com `npx expo start --clear` para limpar cache

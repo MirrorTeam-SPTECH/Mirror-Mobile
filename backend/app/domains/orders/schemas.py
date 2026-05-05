@@ -159,6 +159,15 @@ class OrderListResponse(BaseModel):
         from_attributes = True
 
 
+class TopProductResponse(BaseModel):
+    product_id: int
+    name: str
+    total_quantity: int
+
+    class Config:
+        from_attributes = True
+
+
 class PayPreferenceResponse(BaseModel):
     init_point: str
     sandbox_init_point: str

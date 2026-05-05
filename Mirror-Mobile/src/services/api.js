@@ -4,6 +4,7 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000/a
 
 // Token armazenado em memória (definido pelo AuthContext após login)
 let _authToken = null;
+let _onUnauthorized = null;
 
 export function setAuthToken(token) {
   _authToken = token;
@@ -11,6 +12,10 @@ export function setAuthToken(token) {
 
 export function clearAuthToken() {
   _authToken = null;
+}
+
+export function setOnUnauthorized(callback) {
+  _onUnauthorized = callback;
 }
 
 async function fetchAPI(endpoint, options = {}) {
@@ -29,6 +34,10 @@ async function fetchAPI(endpoint, options = {}) {
     const response = await fetch(url, { ...options, headers });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        clearAuthToken();
+        _onUnauthorized?.();
+      }
       let detail = `${response.status} ${response.statusText}`;
       try {
         const body = await response.json();
@@ -99,6 +108,10 @@ export async function createOrder(items, notes) {
 
 export async function getOrders() {
   return fetchAPI('/orders');
+}
+
+export async function getTopProduct() {
+  return fetchAPI('/orders/top-product');
 }
 
 export async function getOrderById(orderId) {

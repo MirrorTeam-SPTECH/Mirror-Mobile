@@ -1,40 +1,47 @@
-import { StyleSheet, TextInput, View } from "react-native";
 import React from "react";
+import { StyleSheet, TextInput, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
-export default function SearchBar() {
+const LINE = "#E8DFD1";
+const INK = "#2A1E14";
+const MUTED = "#7A6A56";
+
+export default function SearchBar({ query = "", onChangeQuery }) {
   return (
-<View style={{ width: "100%", alignItems: "center", marginTop: 40 }}>
     <View style={styles.container}>
-        <TextInput  style={styles.input}
-            placeholder="Buscar..."           // ✅ Funciona igual
-            placeholderTextColor="#C4C4C4"       // Cor do placeholder
->
-        </TextInput>
+      <View style={styles.bar}>
+        <Ionicons name="search-outline" size={18} color={MUTED} />
+        <TextInput
+          style={styles.input}
+          value={query}
+          onChangeText={onChangeQuery}
+          placeholder="Buscar picanha, costela, linguiça..."
+          placeholderTextColor={MUTED}
+          returnKeyType="search"
+          // @ts-ignore — web only
+          outlineStyle="none"
+        />
+      </View>
     </View>
-    </View>
-  );    
+  );
 }
 
-  
-
 const styles = StyleSheet.create({
-  container: {
-    width: "90%",
-    height: 45,
-    justifyContent: "center",
-    alignItems: "flex-start",
+  container: { paddingHorizontal: 20, paddingBottom: 14 },
+  bar: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
     backgroundColor: "#fff",
-    color: "#C4C4C4",
-    paddingHorizontal: 10,
-    borderRadius: 15,
-    marginTop: -25
+    borderWidth: 1,
+    borderColor: LINE,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
   input: {
-    width: "100%",
-    height: "100%",
-    color: "#C4C4C4",
-    fontSize: 16,
-    borderWidth: 0,
-    outlineStyle: 'none', 
-  },    
+    flex: 1,
+    fontSize: 14,
+    color: INK,
+  },
 });

@@ -1,9 +1,35 @@
 import React from "react";
-import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  SafeAreaView,
+  Platform,
+  ScrollView,
+} from "react-native";
+import { StatusBar } from "expo-status-bar";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
+
+const BG = "#FAF5EC";
+const INK = "#2A1E14";
+const PRIMARY = "#D91C1C";
+const SUBTLE = "#8A7558";
+const LINE = "#E8DFD1";
+const MUTED = "#7A6A56";
+const SERIF = Platform.select({ ios: "Georgia", android: "serif", default: "Georgia" });
+
+const MENU_ITEMS = [
+  { key: "orders",    label: "Meus Pedidos",           icon: "receipt-outline",  screen: "OrderHistory" },
+  { key: "favorites", label: "Favoritos",               icon: "heart-outline",    screen: "Favorites"    },
+  { key: "grill",     label: "Churrasqueiro de Bolso",  icon: "flame-outline",    screen: "GrillAdvisor" },
+  { key: "scanner",   label: "Scanner Comparativo",     icon: "scan-outline",     screen: "LabelScanner" },
+];
 
 export default function ProfileScreen({ navigation }) {
   const { user, logout } = useAuth();
+  const initial = user?.name ? user.name.charAt(0).toUpperCase() : "U";
 
   const handleLogout = () => {
     logout();
@@ -11,112 +37,165 @@ export default function ProfileScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
-          </Text>
+    <SafeAreaView style={styles.safe}>
+      <StatusBar style="dark" />
+
+      <View style={styles.topBar}>
+        <Text style={styles.topLabel}>Portal do Churras</Text>
+        <Text style={styles.topTitle}>Perfil</Text>
+      </View>
+
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <View style={styles.hero}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{initial}</Text>
+          </View>
+          <Text style={styles.name}>{user?.name || "Usuário"}</Text>
+          {!!user?.email && <Text style={styles.email}>{user.email}</Text>}
         </View>
-        <Text style={styles.name}>{user?.name || "Usuário"}</Text>
-        <Text style={styles.email}>{user?.email || ""}</Text>
-      </View>
 
-      <View style={styles.menu}>
-        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate("OrderHistory")}>
-          <Text style={styles.menuIcon}>📋</Text>
-          <Text style={styles.menuText}>Meus Pedidos</Text>
+        <Text style={styles.sectionTitle}>Minha conta</Text>
+
+        <View style={styles.menuCard}>
+          {MENU_ITEMS.map((item, index) => (
+            <TouchableOpacity
+              key={item.key}
+              style={[styles.menuItem, index < MENU_ITEMS.length - 1 && styles.menuItemBorder]}
+              onPress={() => navigation.navigate(item.screen)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.menuIconWrap}>
+                <Ionicons name={item.icon} size={18} color={PRIMARY} />
+              </View>
+              <Text style={styles.menuText}>{item.label}</Text>
+              <Ionicons name="chevron-forward" size={16} color={SUBTLE} />
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.85}>
+          <Ionicons name="log-out-outline" size={18} color="#fff" />
+          <Text style={styles.logoutText}>Sair da conta</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate("Favorites")}>
-          <Text style={styles.menuIcon}>❤️</Text>
-          <Text style={styles.menuText}>Favoritos</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate("GrillAdvisor")}>
-          <Text style={styles.menuIcon}>🔥</Text>
-          <Text style={styles.menuText}>Churrasqueiro de Bolso</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate("LabelScanner")}>
-          <Text style={styles.menuIcon}>🔍</Text>
-          <Text style={styles.menuText}>Scanner Comparativo</Text>
-        </TouchableOpacity>
-      </View>
-
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutText}>Sair</Text>
-      </TouchableOpacity>
-    </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safe: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
-    paddingTop: 60,
-    paddingHorizontal: 25,
+    backgroundColor: BG,
   },
-  header: {
+  topBar: {
+    paddingTop: Platform.OS === "android" ? 44 : 18,
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+  },
+  topLabel: {
+    fontSize: 11,
+    letterSpacing: 1.6,
+    textTransform: "uppercase",
+    color: SUBTLE,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  topTitle: {
+    fontFamily: SERIF,
+    fontSize: 28,
+    color: INK,
+    fontWeight: "400",
+    letterSpacing: -0.3,
+  },
+  scroll: {
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+  },
+  hero: {
     alignItems: "center",
-    marginBottom: 35,
+    paddingVertical: 28,
   },
   avatar: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: "#C41E3A",
+    backgroundColor: PRIMARY,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 14,
   },
   avatarText: {
     color: "#fff",
-    fontSize: 32,
-    fontWeight: "bold",
+    fontFamily: SERIF,
+    fontSize: 34,
+    fontWeight: "400",
   },
   name: {
+    fontFamily: SERIF,
     fontSize: 22,
-    fontWeight: "bold",
-    color: "#333",
+    color: INK,
+    fontWeight: "400",
     marginBottom: 4,
   },
   email: {
-    fontSize: 14,
-    color: "#999",
+    fontSize: 13,
+    color: MUTED,
+    letterSpacing: 0.2,
   },
-  menu: {
+  sectionTitle: {
+    fontFamily: SERIF,
+    fontSize: 20,
+    color: INK,
+    fontWeight: "400",
+    letterSpacing: -0.2,
+    marginBottom: 12,
+  },
+  menuCard: {
     backgroundColor: "#fff",
-    borderRadius: 15,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: LINE,
     overflow: "hidden",
-    marginBottom: 30,
+    marginBottom: 24,
   },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    paddingHorizontal: 16,
+    gap: 12,
   },
-  menuIcon: {
-    fontSize: 20,
-    marginRight: 15,
+  menuItemBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: LINE,
+  },
+  menuIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: "rgba(217,28,28,0.08)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   menuText: {
-    fontSize: 16,
-    color: "#333",
+    flex: 1,
+    fontSize: 15,
+    color: INK,
+    fontWeight: "500",
   },
-  logoutButton: {
-    backgroundColor: "#C41E3A",
-    borderRadius: 25,
-    paddingVertical: 16,
+  logoutBtn: {
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: PRIMARY,
+    borderRadius: 14,
+    paddingVertical: 16,
   },
   logoutText: {
     color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
+    fontSize: 15,
+    fontWeight: "600",
+    letterSpacing: 0.3,
   },
 });

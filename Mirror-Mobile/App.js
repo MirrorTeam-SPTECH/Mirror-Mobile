@@ -21,6 +21,7 @@ import OrderTrackingScreen from "./src/screens/OrderTrackingScreen";
 import OrderHistoryScreen from "./src/screens/OrderHistoryScreen";
 import GrillAdvisorScreen from "./src/screens/GrillAdvisorScreen";
 import LabelScannerScreen from "./src/screens/LabelScannerScreen";
+import ProximityScreen from "./src/screens/ProximityScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -39,8 +40,8 @@ function MainTabs() {
 
           if (route.name === "HomeTab") {
             iconName = "home";
-          } else if (route.name === "Search") {
-            iconName = "magnify";
+          } else if (route.name === "Nearby") {
+            iconName = "map-marker-outline";
           } else if (route.name === "Orders") {
             iconName = "cart";
           } else if (route.name === "Favorites") {
@@ -71,16 +72,12 @@ function MainTabs() {
       })}
     >
       <Tab.Screen name="HomeTab" component={HomeScreen} />
+      <Tab.Screen name="Nearby" component={ProximityScreen} />
       <Tab.Screen
-        name="Search"
-        component={HomeScreen}
-        listeners={({ navigation }) => ({
-          tabPress: (e) => {
-            e.preventDefault();
-          },
-        })}
+        name="Orders"
+        component={CartScreen}
+        options={{ tabBarStyle: { display: "none" } }}
       />
-      <Tab.Screen name="Orders" component={CartScreen} />
       <Tab.Screen
         name="Favorites"
         component={FavoritesScreen}

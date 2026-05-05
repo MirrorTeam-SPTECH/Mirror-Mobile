@@ -53,6 +53,9 @@ export default function CartScreen({ navigation }) {
       <View style={styles.container}>
         <StatusBar style="auto" />
         <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.navigate("HomeTab")}>
+            <Text style={styles.backIcon}>←</Text>
+          </TouchableOpacity>
           <Text style={styles.headerTitle}>Carrinho</Text>
         </View>
         <View style={styles.emptyContainer}>
@@ -78,6 +81,9 @@ export default function CartScreen({ navigation }) {
 
       {/* Header */}
       <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.navigate("HomeTab")}>
+          <Text style={styles.backIcon}>←</Text>
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Carrinho ({cart.length})</Text>
         <TouchableOpacity onPress={handleClearCart}>
           <Text style={styles.clearButton}>Limpar</Text>
@@ -192,10 +198,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
   },
+  backIcon: { fontSize: 28, color: "#333", marginRight: 15 },
   headerTitle: {
     fontSize: 20,
     fontWeight: "bold",
     color: "#333",
+    flex: 1,
   },
   clearButton: {
     fontSize: 14,
