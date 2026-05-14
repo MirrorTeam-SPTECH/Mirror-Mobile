@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 import {
-  StyleSheet,
-  Text,
-  View,
-  TextInput,
-  TouchableOpacity,
+  ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Image,
-  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
@@ -243,7 +243,10 @@ export default function LoginScreen({ navigation }) {
             </View>
             {pwError && <FieldError text={pwError} />}
             {mode === "login" && (
-              <TouchableOpacity style={styles.forgotRow}>
+              <TouchableOpacity
+                style={styles.forgotRow}
+                onPress={() => navigation.navigate("ForgotPassword")}
+              >
                 <Text style={styles.forgot}>Esqueci a senha</Text>
               </TouchableOpacity>
             )}

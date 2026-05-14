@@ -5,6 +5,140 @@
 
 ---
 
+## Fala de apresentação — Frontend
+
+> *Use como roteiro. As indicações entre colchetes [ ] são lembretes do que mostrar na tela — não precisa ler em voz alta.*
+
+---
+
+### Abertura
+
+"Bom dia / Boa tarde a todos. Eu vou apresentar o frontend do nosso projeto, o **Portal do Churras** — um super-app para um food truck de hambúrguer artesanal aqui em São Paulo, em Pirituba. O diferencial desse projeto é que ele tem um cliente real, então as decisões que tomamos ao longo do semestre foram baseadas em necessidades reais de negócio."
+
+"A proposta do app é cobrir toda a experiência do cliente — desde conhecer o cardápio até retirar o pedido — com algumas features extras que vou mostrar agora."
+
+---
+
+### Onboarding
+
+*[ Abrir o app pela primeira vez — tela de onboarding ]*
+
+"Quando o cliente abre o app pela primeira vez, ele vê essa tela de apresentação. São três slides que apresentam o conceito do food truck de forma rápida. O cliente pode avançar pelo ritmo dele ou pular direto pro app. Depois que ele passa uma vez, não aparece mais — guardamos essa informação localmente no celular."
+
+---
+
+### Login e Cadastro
+
+*[ Avançar para a tela de login ]*
+
+"Aqui é a tela de login. O cliente entra com e-mail e senha. Se for a primeira vez, se cadastra na mesma tela. O sistema usa autenticação com token JWT — que é basicamente um certificado digital temporário — e esse token fica salvo no celular. Então se o cliente fechar e abrir o app de novo, ele já entra direto, sem precisar fazer login de novo."
+
+---
+
+### Home — Cardápio
+
+*[ Logar e mostrar a HomeScreen ]*
+
+"Aqui é a tela principal. O cardápio está dividido por categorias — Hambúrgueres, Bebidas, Acompanhamentos, Sobremesas, Combos. O cliente filtra pelo que quiser aqui em cima. Cada card mostra o nome, a descrição, o preço e o tempo de preparo. Tem também o botão de favoritar."
+
+*[ Mostrar os cards, talvez rolar um pouco ]*
+
+"A imagem que aparece no card é uma foto real do produto. Para os produtos que ainda não têm foto cadastrada, o app exibe um placeholder colorido — diferente por produto — pra não deixar aquele quadrado branco feio."
+
+---
+
+### Detalhe do Produto
+
+*[ Clicar em um produto ]*
+
+"Quando o cliente toca num produto, abre essa tela de detalhe. Aqui ele vê a descrição completa e as opções de personalização — por exemplo, tipo de queijo, se quer adicionar bacon, esse tipo de coisa. Essas opções foram configuradas pelo próprio dono do food truck, não é livre — é igual ao iFood, onde o cardápio define o que pode ser customizado."
+
+*[ Selecionar uma opção e adicionar ao carrinho ]*
+
+"Escolheu, adicionou ao carrinho."
+
+---
+
+### Carrinho e Checkout
+
+*[ Abrir o carrinho ]*
+
+"No carrinho, o cliente vê tudo que adicionou, pode ajustar a quantidade ou remover algum item. Aqui embaixo aparece o subtotal e o total."
+
+*[ Clicar em Finalizar Pedido ]*
+
+"Quando ele clica em Finalizar Pedido, o sistema registra o pedido lá no backend — e aí o [colega do backend] vai explicar o que acontece nesse momento — e abre a tela de pagamento do Mercado Pago para o cliente pagar."
+
+---
+
+### Acompanhar Pedido
+
+*[ Voltar pro app após o pagamento — ou navegar para a tela de acompanhamento ]*
+
+"Depois de pagar, o cliente cai nessa tela de acompanhamento. O status atualiza automaticamente a cada 5 segundos — sem o cliente precisar ficar apertando refresh. Quando o pedido fica pronto, aparece esse código aqui — o código de retirada. O cliente mostra esse código no balcão e retira o lanche."
+
+"Os status seguem uma máquina de estados: aguardando pagamento, pago, em preparo, pronto pra retirada, entregue. Cada transição é controlada pelo backend."
+
+---
+
+### Fidelidade
+
+*[ Navegar para a aba de Fidelidade ]*
+
+"Essa é uma das features que o próprio dono pediu. O cartão de fidelidade. A cada pedido que tem pelo menos um hambúrguer, o cliente ganha um selo — essa bolinha aqui fica vermelha. Com 10 selos, ele ganha um combo grátis."
+
+"Uma detalhe importante: só pedido com hambúrguer conta. Se o cliente pedir só uma bebida ou uma batata, não avança. Essa regra foi definida com o cliente do projeto."
+
+*[ Mostrar as bolinhas preenchidas se houver ]*
+
+---
+
+### Perto de Você
+
+*[ Navegar para Perto de Você via tela de Perfil ]*
+
+"Essa feature usa a localização em tempo real do celular. O app calcula a distância até o food truck e avisa quando o cliente está a menos de 300 metros. Se ele já tiver histórico de pedidos, o app sugere o lanche que ele mais pede — tipo um 'tá chegando, já manda o de sempre?'."
+
+"O endereço do food truck também aparece sempre na tela, pra facilitar."
+
+---
+
+### Churrasqueiro de Bolso
+
+*[ Navegar para Churrasqueiro de Bolso via Perfil ]*
+
+"Essa é uma das features com inteligência artificial. O cliente tira uma foto da carne na churrasqueira e o app analisa o ponto — se está mal passado, ao ponto, bem passado — e dá uma dica de preparo. Isso usa a API de visão do Claude, que é o modelo de IA da Anthropic. A foto vai pro nosso servidor, o servidor manda pro Claude, e o Claude devolve a análise."
+
+*[ Mostrar a tela, se possível tirar uma foto ou mostrar um resultado já pronto ]*
+
+---
+
+### Scanner Comparativo
+
+*[ Navegar para Scanner Comparativo via Perfil ]*
+
+"No Scanner Comparativo, o cliente aponta a câmera pra um lanche de outro lugar — pode ser um rótulo, uma embalagem, o que for. O app lê as informações e sugere qual produto do Portal do Churras seria o equivalente ou o melhor substituto. É uma forma bem criativa de mostrar o produto do cliente."
+
+---
+
+### Favoritos e Perfil
+
+*[ Abrir a aba de Favoritos ]*
+
+"Os produtos curtidos ficam salvos aqui nos Favoritos, sincronizados com a conta do cliente. Funciona de qualquer aparelho."
+
+*[ Mostrar a tela de Perfil ]*
+
+"E aqui no Perfil, o cliente acessa o histórico de pedidos, todas as features que mostrei, e pode sair da conta."
+
+---
+
+### Fechamento — gancho pro backend
+
+"Isso foi tudo que construímos no frontend. Uma coisa importante é que o app é só a ponta do iceberg — tudo que mostrei aqui depende de uma série de decisões e processamentos que acontecem no servidor. O pagamento, o registro do pedido, a fidelidade, a integração com a IA — tudo isso é responsabilidade do backend. Então eu passo a palavra pro [nome do colega] que vai explicar como o servidor foi estruturado e o que acontece por trás de cada uma dessas ações."
+
+---
+
 ## O que é o Portal do Churras?
 
 É um aplicativo mobile completo para o food truck "Portal do Churras", localizado em Pirituba, São Paulo. O app cobre toda a jornada do cliente — desde navegar pelo cardápio até retirar o pedido — com funcionalidades extras de fidelidade e inteligência artificial.
@@ -122,5 +256,5 @@ Mirror-Mobile/
 
 ## Equipe e contexto
 
-Projeto Integrador do 5º semestre de Análise e Desenvolvimento de Sistemas — FATEC / SPTech.
+Projeto Integrador do 5º semestre de Análise e Desenvolvimento de Sistemas — SPTech.
 Cliente real: food truck Portal do Churras, Pirituba — São Paulo.

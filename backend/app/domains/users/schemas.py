@@ -28,3 +28,20 @@ class Token(BaseModel):
     access_token: str
     token_type: str
     user: UserResponse
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    code: str
+    new_password: str
+
+
+class GoogleLoginRequest(BaseModel):
+    id_token: str
+
+
+class MessageResponse(BaseModel):
+    message: str

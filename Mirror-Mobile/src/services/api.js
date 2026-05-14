@@ -75,6 +75,20 @@ export async function getMe() {
   return fetchAPI('/users/me');
 }
 
+export async function forgotPassword(email) {
+  return fetchAPI('/users/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function resetPassword(code, newPassword) {
+  return fetchAPI('/users/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ code, new_password: newPassword }),
+  });
+}
+
 // ============================================================================
 // Catalog
 // ============================================================================

@@ -1,20 +1,12 @@
-"""
-SQLAlchemy models for users domain.
-"""
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from app.database import Base
 
 
 class User(Base):
-    """
-    User table.
-
-    Stores user authentication and profile information.
-    """
     __tablename__ = "user"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -24,9 +16,16 @@ class User(Base):
     hashed_password = Column(String(255), nullable=False)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
-    # Relationships
     orders = relationship("Order", back_populates="user")
     favorites = relationship("Favorite", back_populates="user")
 
-    def __repr__(self):
-        return f"<User(id={self.id}, email={self.email}, name={self.name})>"
+
+class PasswordResetToken(Base):
+    __tablename__ = "password_reset_token"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    token = Column(String(10), nullable=False, index=True)
+    expires_at = Column(DateTime, nullable=False)
+    used = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)

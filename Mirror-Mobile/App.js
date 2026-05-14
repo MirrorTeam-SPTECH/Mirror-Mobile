@@ -23,6 +23,10 @@ import GrillAdvisorScreen from "./src/screens/GrillAdvisorScreen";
 import LabelScannerScreen from "./src/screens/LabelScannerScreen";
 import ProximityScreen from "./src/screens/ProximityScreen";
 import LoyaltyScreen from "./src/screens/LoyaltyScreen";
+import ForgotPasswordScreen from "./src/screens/ForgotPasswordScreen";
+import ResetPasswordScreen from "./src/screens/ResetPasswordScreen";
+import DashboardScreen from "./src/screens/DashboardScreen";
+import AnalyticsScreen from "./src/screens/AnalyticsScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -146,6 +150,10 @@ export default function App() {
                 <Stack.Screen name="GrillAdvisor" component={GrillAdvisorScreen} />
                 <Stack.Screen name="LabelScanner" component={LabelScannerScreen} />
                 <Stack.Screen name="Nearby" component={ProximityScreen} />
+                <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+                <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+                <Stack.Screen name="Dashboard" component={DashboardScreen} />
+                <Stack.Screen name="Analytics" component={AnalyticsScreen} />
               </Stack.Navigator>
             </NavigationContainer>
           </CartProvider>
