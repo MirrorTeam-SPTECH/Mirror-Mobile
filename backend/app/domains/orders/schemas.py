@@ -148,12 +148,21 @@ class OrderResponse(BaseModel):
         from_attributes = True
 
 
+class OrderItemSummary(BaseModel):
+    name_snapshot: str
+    quantity: int
+
+    class Config:
+        from_attributes = True
+
+
 class OrderListResponse(BaseModel):
     id: int
     status: str
     pickup_code: Optional[str] = None
     total_cents: int
     created_at: datetime
+    items: list[OrderItemSummary] = []
 
     class Config:
         from_attributes = True
@@ -169,8 +178,8 @@ class TopProductResponse(BaseModel):
 
 
 class PayPreferenceResponse(BaseModel):
-    init_point: str
-    sandbox_init_point: str
+    init_point: Optional[str] = None
+    sandbox_init_point: Optional[str] = None
     preference_id: str
 
 

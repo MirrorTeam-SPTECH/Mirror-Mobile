@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 import { useFavorites } from "../context/FavoritesContext";
 import { getOrders } from "../services/api";
@@ -45,11 +46,18 @@ export default function ProfileScreen({ navigation }) {
   const initial = user?.name ? user.name.charAt(0).toUpperCase() : "U";
   const firstName = user?.name ? user.name.split(" ")[0] : "Visitante";
 
-  useEffect(() => {
-    getOrders()
-      .then((orders) => setOrdersCount(orders.length))
-      .catch(() => setOrdersCount(0));
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      getOrders()
+        .then((orders) => {
+          const valid = orders.filter((o) =>
+            ["paid", "preparing", "ready", "delivered"].includes(o.status)
+          );
+          setOrdersCount(valid.length);
+        })
+        .catch(() => setOrdersCount(0));
+    }, [])
+  );
 
   const handleLogout = () => {
     logout();

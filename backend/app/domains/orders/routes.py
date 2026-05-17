@@ -136,6 +136,14 @@ def create_order(
         })
 
     repo = OrderRepository(db)
+
+    # Cancela pedidos antigos que ficaram travados em pending_payment
+    db.query(Order).filter(
+        Order.user_id == current_user.id,
+        Order.status == OrderStatus.PENDING_PAYMENT,
+    ).update({"status": OrderStatus.CANCELLED}, synchronize_session=False)
+    db.commit()
+
     order = repo.create(
         user_id=current_user.id,
         items_data=items_data,
@@ -160,6 +168,7 @@ def get_top_product(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    _paid = [OrderStatus.PAID, OrderStatus.PREPARING, OrderStatus.READY, OrderStatus.DELIVERED]
     row = (
         db.query(
             OrderItem.product_id,
@@ -167,7 +176,10 @@ def get_top_product(
             func.sum(OrderItem.quantity).label("total_quantity"),
         )
         .join(Order, Order.id == OrderItem.order_id)
-        .filter(Order.user_id == current_user.id)
+        .filter(
+            Order.user_id == current_user.id,
+            Order.status.in_(_paid),
+        )
         .group_by(OrderItem.product_id, OrderItem.name_snapshot)
         .order_by(func.sum(OrderItem.quantity).desc())
         .first()
@@ -193,13 +205,17 @@ def get_loyalty(
     if not burger_category:
         return LoyaltyResponse(total_stamps=0, stamps_in_cycle=0, cycles_completed=0)
 
+    _paid_statuses = [
+        OrderStatus.PAID, OrderStatus.PREPARING,
+        OrderStatus.READY, OrderStatus.DELIVERED,
+    ]
     qualifying = (
         db.query(Order)
         .join(OrderItem, OrderItem.order_id == Order.id)
         .join(Product, Product.id == OrderItem.product_id)
         .filter(
             Order.user_id == current_user.id,
-            Order.status != OrderStatus.CANCELLED,
+            Order.status.in_(_paid_statuses),
             Product.category_id == burger_category.id,
         )
         .distinct()
@@ -298,12 +314,6 @@ def create_payment_preference(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    if not settings.MP_ACCESS_TOKEN:
-        raise HTTPException(
-            status_code=503,
-            detail="Pagamento não configurado. Adicione MP_ACCESS_TOKEN no .env",
-        )
-
     repo = OrderRepository(db)
     order = repo.get_by_id(order_id, user_id=current_user.id)
     if not order:
@@ -314,7 +324,24 @@ def create_payment_preference(
             detail=f"Pedido não está aguardando pagamento (status: {order.status})",
         )
 
-    sdk = mercadopago.SDK(settings.MP_ACCESS_TOKEN)
+    # Sem integração MP real: simula pagamento aprovado diretamente.
+    # Tokens reais começam com "TEST-" (sandbox) ou "APP_USR-" (produção).
+    _mp_token = settings.MP_ACCESS_TOKEN or ""
+    _has_real_token = _mp_token.startswith("TEST-") or _mp_token.startswith("APP_USR-")
+    if not _has_real_token:
+        repo.set_payment_preference(order.id, "mock-paid")
+        repo.confirm_payment(order.id, f"mock-{order.id}", "approved")
+        try:
+            repo.update_status(order.id, "paid")
+        except ValueError:
+            pass
+        return PayPreferenceResponse(
+            init_point=None,
+            sandbox_init_point=None,
+            preference_id="mock-paid",
+        )
+
+    sdk = mercadopago.SDK(_mp_token)
 
     preference_data = {
         "items": [

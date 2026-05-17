@@ -28,6 +28,7 @@ class OrderRepository:
     def get_by_user(self, user_id: int) -> list[Order]:
         return (
             self.db.query(Order)
+            .options(joinedload(Order.items))
             .filter(Order.user_id == user_id)
             .order_by(Order.created_at.desc())
             .all()

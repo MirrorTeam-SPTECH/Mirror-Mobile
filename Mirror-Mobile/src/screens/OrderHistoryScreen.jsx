@@ -139,6 +139,11 @@ function OrderCard({ order, onPress, onNutritionPress }) {
       </View>
       <View style={styles.cardBody}>
         <Text style={styles.date}>{date}</Text>
+        {order.items && order.items.length > 0 && (
+          <Text style={styles.itemsSummary} numberOfLines={1}>
+            {order.items.map((i) => `${i.quantity}× ${i.name_snapshot}`).join("  ·  ")}
+          </Text>
+        )}
         {order.pickup_code && (
           <Text style={styles.pickupCode}>Código: {order.pickup_code}</Text>
         )}
@@ -169,11 +174,13 @@ export default function OrderHistoryScreen({ navigation }) {
   const [error, setError] = useState(null);
   const [nutritionOrderId, setNutritionOrderId] = useState(null);
 
+  const HIDE_STATUSES = new Set(["pending_payment", "cancelled"]);
+
   const fetchOrders = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getOrders();
-      setOrders(data);
+      setOrders(data.filter((o) => !HIDE_STATUSES.has(o.status)));
       setError(null);
     } catch (err) {
       setError("Não foi possível carregar seus pedidos.");
@@ -272,6 +279,7 @@ const styles = StyleSheet.create({
   statusBadge: { fontSize: 13, fontWeight: "600" },
   cardBody: { marginBottom: 12 },
   date: { fontSize: 13, color: "#999" },
+  itemsSummary: { fontSize: 13, color: "#555", marginTop: 3, fontWeight: "500" },
   pickupCode: { fontSize: 13, color: "#666", marginTop: 4 },
   cardFooter: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   total: { fontSize: 18, fontWeight: "bold", color: "#333" },

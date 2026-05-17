@@ -69,19 +69,17 @@ export default function AnalyticsScreen() {
   }, []);
 
   // ─── Stats ─────────────────────────────────────────────────────────────────
-  const nonCancelled = orders.filter((o) => o.status !== "cancelled");
-  const paidOrders   = orders.filter((o) =>
-    ["paid", "preparing", "ready", "delivered"].includes(o.status)
-  );
-  const delivered  = orders.filter((o) => o.status === "delivered").length;
-  const totalSpent = paidOrders.reduce((s, o) => s + (o.total_cents || 0), 0);
-  const avgTicket  = paidOrders.length > 0
+  const PAID_STATUSES = ["paid", "preparing", "ready", "delivered"];
+  const paidOrders    = orders.filter((o) => PAID_STATUSES.includes(o.status));
+  const delivered     = orders.filter((o) => o.status === "delivered").length;
+  const totalSpent    = paidOrders.reduce((s, o) => s + (o.total_cents || 0), 0);
+  const avgTicket     = paidOrders.length > 0
     ? Math.round(totalSpent / paidOrders.length)
     : 0;
 
   // Top items
   const itemMap = {};
-  orders.forEach((order) => {
+  paidOrders.forEach((order) => {
     (order.items || []).forEach((item) => {
       const k = String(item.product_id);
       if (!itemMap[k]) itemMap[k] = { name: item.name_snapshot, count: 0 };
@@ -97,14 +95,14 @@ export default function AnalyticsScreen() {
 
   // Day of week (Mon → Sun)
   const rawDay = Array(7).fill(0);
-  orders.forEach((o) => { if (o.created_at) rawDay[new Date(o.created_at).getDay()]++; });
+  paidOrders.forEach((o) => { if (o.created_at) rawDay[new Date(o.created_at).getDay()]++; });
   const dayCounts = [rawDay[1], rawDay[2], rawDay[3], rawDay[4], rawDay[5], rawDay[6], rawDay[0]];
   const maxDay    = Math.max(...dayCounts, 1);
   const peakDayI  = dayCounts.indexOf(Math.max(...dayCounts));
 
   // Time slots
   const timeCounts = [0, 0, 0, 0];
-  orders.forEach((o) => {
+  paidOrders.forEach((o) => {
     if (!o.created_at) return;
     const h = new Date(o.created_at).getHours();
     if (h >= 6 && h < 12) timeCounts[0]++;
@@ -120,9 +118,9 @@ export default function AnalyticsScreen() {
     { orders: 47 }, { orders: 38 }, { orders: 31 }, { orders: 28 },
     { orders: 22 }, { orders: 19 }, { orders: 15 }, { orders: 11 },
   ];
-  const rankPos = [...MOCK, { orders: nonCancelled.length }]
+  const rankPos = [...MOCK, { orders: paidOrders.length }]
     .sort((a, b) => b.orders - a.orders)
-    .findIndex((u) => u.orders === nonCancelled.length) + 1;
+    .findIndex((u) => u.orders === paidOrders.length) + 1;
 
   // ─── Loading ───────────────────────────────────────────────────────────────
   if (loading) {
@@ -160,7 +158,7 @@ export default function AnalyticsScreen() {
           <KpiCard
             icon="receipt-outline"
             label="Total de pedidos"
-            value={String(nonCancelled.length)}
+            value={String(paidOrders.length)}
             accent
           />
           <KpiCard

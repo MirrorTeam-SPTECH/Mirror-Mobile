@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
+  Modal,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useCart } from "../context/CartContext";
@@ -21,6 +22,7 @@ export default function CheckoutScreen({ navigation }) {
 
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
+  const [processingPayment, setProcessingPayment] = useState(false);
 
   // Usuário não autenticado — pede login
   if (!isLoggedIn) {
@@ -50,41 +52,59 @@ export default function CheckoutScreen({ navigation }) {
 
     setLoading(true);
     try {
-      // Monta payload do pedido
       const items = cart.map((item) => ({
         product_id: item.productId,
         quantity: item.quantity,
         options: item.selectedOptions.map((opt) => ({ option_id: opt.optionId })),
       }));
 
-      // 1. Cria o pedido no backend
       const order = await createOrder(items, notes || null);
-
-      // 2. Cria preferência de pagamento no Mercado Pago
       const preference = await createPaymentPreference(order.id);
 
-      // 3. Abre a URL de pagamento no browser
+      const isMock = preference.preference_id === "mock-paid";
       const payUrl = preference.sandbox_init_point || preference.init_point;
-      await Linking.openURL(payUrl);
 
-      // 4. Limpa o carrinho e vai para o tracking
+      if (!isMock && payUrl) {
+        await Linking.openURL(payUrl);
+      }
+
       clearCart();
-      navigation.replace("OrderTracking", { orderId: order.id });
+
+      if (isMock) {
+        // Mostra tela de "processando" por 1,5s para dar sensação de pagamento real
+        setLoading(false);
+        setProcessingPayment(true);
+        setTimeout(() => {
+          setProcessingPayment(false);
+          navigation.replace("OrderTracking", { orderId: order.id });
+        }, 1500);
+      } else {
+        navigation.replace("OrderTracking", { orderId: order.id });
+      }
 
     } catch (error) {
+      setLoading(false);
       Alert.alert(
         "Erro ao criar pedido",
         error.message || "Tente novamente.",
         [{ text: "OK" }]
       );
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
+
+      <Modal transparent visible={processingPayment} animationType="fade">
+        <View style={styles.processingOverlay}>
+          <View style={styles.processingCard}>
+            <ActivityIndicator size="large" color="#009EE3" />
+            <Text style={styles.processingTitle}>Processando pagamento</Text>
+            <Text style={styles.processingSubtitle}>Aguarde um instante...</Text>
+          </View>
+        </View>
+      </Modal>
 
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -266,4 +286,17 @@ const styles = StyleSheet.create({
   },
   payButtonDisabled: { backgroundColor: "#ccc" },
   payButtonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  processingOverlay: {
+    flex: 1, backgroundColor: "rgba(0,0,0,0.55)",
+    justifyContent: "center", alignItems: "center",
+  },
+  processingCard: {
+    backgroundColor: "#fff", borderRadius: 20,
+    paddingVertical: 36, paddingHorizontal: 48,
+    alignItems: "center", gap: 16,
+    shadowColor: "#000", shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 8 }, shadowRadius: 20, elevation: 10,
+  },
+  processingTitle: { fontSize: 17, fontWeight: "700", color: "#1a1a1a", marginTop: 4 },
+  processingSubtitle: { fontSize: 14, color: "#888" },
 });

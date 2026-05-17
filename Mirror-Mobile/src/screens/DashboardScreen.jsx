@@ -110,15 +110,13 @@ export default function DashboardScreen() {
   }, []);
 
   // ─── Stats ─────────────────────────────────────────────────────────────────
-  const nonCancelled = orders.filter((o) => o.status !== "cancelled");
-  const paidOrders   = orders.filter((o) =>
-    ["paid", "preparing", "ready", "delivered"].includes(o.status)
-  );
-  const totalSpent = paidOrders.reduce((s, o) => s + (o.total_cents || 0), 0);
+  const PAID_STATUSES = ["paid", "preparing", "ready", "delivered"];
+  const paidOrders    = orders.filter((o) => PAID_STATUSES.includes(o.status));
+  const totalSpent    = paidOrders.reduce((s, o) => s + (o.total_cents || 0), 0);
 
   // Top items
   const itemMap = {};
-  orders.forEach((order) => {
+  paidOrders.forEach((order) => {
     (order.items || []).forEach((item) => {
       const k = String(item.product_id);
       if (!itemMap[k]) itemMap[k] = { name: item.name_snapshot, count: 0 };
@@ -135,7 +133,7 @@ export default function DashboardScreen() {
 
   // Day of week (0=Dom…6=Sáb → map to Seg…Dom order)
   const rawDay = Array(7).fill(0);
-  orders.forEach((o) => { if (o.created_at) rawDay[new Date(o.created_at).getDay()]++; });
+  paidOrders.forEach((o) => { if (o.created_at) rawDay[new Date(o.created_at).getDay()]++; });
   // Reorder Mon–Sun: JS getDay 0=Sun,1=Mon,…,6=Sat → index mapping for DAYS_SHORT Seg…Dom
   const dayCounts = [rawDay[1], rawDay[2], rawDay[3], rawDay[4], rawDay[5], rawDay[6], rawDay[0]];
   const maxDay   = Math.max(...dayCounts, 1);
@@ -143,7 +141,7 @@ export default function DashboardScreen() {
 
   // Time slot
   const timeCounts = [0, 0, 0, 0];
-  orders.forEach((o) => {
+  paidOrders.forEach((o) => {
     if (!o.created_at) return;
     const h = new Date(o.created_at).getHours();
     if (h >= 6 && h < 12) timeCounts[0]++;
@@ -174,7 +172,7 @@ export default function DashboardScreen() {
       await Share.share({
         message:
           `🍔 Minha retrospectiva 2026 no Portal do Churras\n` +
-          `📦 ${nonCancelled.length} pedidos realizados\n` +
+          `📦 ${paidOrders.length} pedidos realizados\n` +
           `💸 ${formatPrice(totalSpent)} investidos em sabor\n` +
           (topName !== "—" ? `⭐ Favorito: ${topName}` : ""),
       });
@@ -222,7 +220,7 @@ export default function DashboardScreen() {
           <View>
             <Text style={[s.eyebrow, { marginBottom: 4 }]}>VOCÊ FEZ</Text>
             <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 10 }}>
-              <Text style={s.bigNumber}>{nonCancelled.length}</Text>
+              <Text style={s.bigNumber}>{paidOrders.length}</Text>
               <Text style={[s.coverSubNum, { paddingBottom: 12 }]}>pedidos</Text>
             </View>
             <Text style={s.coverDesc}>
@@ -366,7 +364,7 @@ export default function DashboardScreen() {
       { name: "Diego F.",   orders: 15 },
       { name: "Isabela N.", orders: 11 },
     ];
-    const ranked = [...MOCK, { name: "Você", orders: nonCancelled.length, isUser: true }]
+    const ranked = [...MOCK, { name: "Você", orders: paidOrders.length, isUser: true }]
       .sort((a, b) => b.orders - a.orders)
       .map((u, i) => ({ ...u, position: i + 1 }));
 
@@ -402,7 +400,7 @@ export default function DashboardScreen() {
 
           <Text style={[s.slideDesc, { color: "rgba(250,245,236,0.65)" }]}>
             {inTop3
-              ? `Com ${nonCancelled.length} pedidos, você chegou ao top 3!`
+              ? `Com ${paidOrders.length} pedidos, você chegou ao top 3!`
               : `Entre ${total} clientes frequentes. Cada pedido te sobe no ranking.`}
           </Text>
 
@@ -448,7 +446,7 @@ export default function DashboardScreen() {
                 Você · #{userPos}
               </Text>
               <Text style={s.podiumSub}>
-                {nonCancelled.length} pedido{nonCancelled.length !== 1 ? "s" : ""}
+                {paidOrders.length} pedido{paidOrders.length !== 1 ? "s" : ""}
               </Text>
             </View>
           )}
@@ -517,7 +515,7 @@ export default function DashboardScreen() {
           </Text>
           <Text style={[s.slideDesc, { color: MUTED, textAlign: "center", marginTop: 8 }]}>
             Compartilha sua retrô e desafia a galera a bater seus{" "}
-            {nonCancelled.length} pedidos.
+            {paidOrders.length} pedidos.
           </Text>
 
           <TouchableOpacity style={s.shareBtn} onPress={handleShare} activeOpacity={0.85}>
