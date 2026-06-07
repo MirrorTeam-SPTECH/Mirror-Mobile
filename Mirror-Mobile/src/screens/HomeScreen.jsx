@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { StyleSheet, Text, View, SafeAreaView, Platform } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import TopBar from "../components/TopBar";
 import SearchBar from "../components/SearchBar";
@@ -13,6 +14,7 @@ const PRIMARY = "#D91C1C";
 const SERIF = Platform.select({ ios: "Georgia", android: "serif", default: "Georgia" });
 
 export default function HomeScreen({ navigation }) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [query, setQuery] = useState("");
   const firstName = user?.name ? user.name.split(" ")[0] : null;
@@ -23,15 +25,15 @@ export default function HomeScreen({ navigation }) {
       <TopBar navigation={navigation} />
 
       <Text style={styles.heading}>
-        {firstName ? `Olá, ${firstName}. ` : "Olá! "}
-        <Text style={styles.headingAccent}>O que vai ser?</Text>
+        {firstName ? t("home.greeting_name", { name: firstName }) : t("home.greeting")}
+        <Text style={styles.headingAccent}>{t("home.question")}</Text>
       </Text>
 
       <SearchBar query={query} onChangeQuery={setQuery} />
       <CategoryFilter />
 
       <View style={styles.sectionRow}>
-        <Text style={styles.sectionTitle}>Pra começar bem</Text>
+        <Text style={styles.sectionTitle}>{t("home.section_start")}</Text>
       </View>
 
       <ProductGrid query={query} />

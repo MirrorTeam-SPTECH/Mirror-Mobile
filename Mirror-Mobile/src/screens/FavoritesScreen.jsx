@@ -12,6 +12,7 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import { useFavorites } from "../context/FavoritesContext";
 import { formatPrice } from "../services/api";
 import { PRODUCT_IMAGES } from "../services/productImages";
@@ -66,6 +67,7 @@ function FavoriteCard({ product }) {
 }
 
 export default function FavoritesScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const { favoriteProducts, loadFavorites } = useFavorites();
 
@@ -78,18 +80,16 @@ export default function FavoritesScreen() {
           <Ionicons name="chevron-back" size={26} color={INK} />
         </TouchableOpacity>
         <View style={styles.topBarText}>
-          <Text style={styles.topLabel}>Portal do Churras</Text>
-          <Text style={styles.topTitle}>Favoritos</Text>
+          <Text style={styles.topLabel}>{t("common.app_name")}</Text>
+          <Text style={styles.topTitle}>{t("favorites.title")}</Text>
         </View>
       </View>
 
       {favoriteProducts.length === 0 ? (
         <View style={styles.center}>
           <Ionicons name="heart-outline" size={56} color={SUBTLE} />
-          <Text style={styles.emptyTitle}>Nenhum favorito ainda</Text>
-          <Text style={styles.emptyHint}>
-            Toque no coração de um lanche para salvar aqui
-          </Text>
+          <Text style={styles.emptyTitle}>{t("favorites.empty_title")}</Text>
+          <Text style={styles.emptyHint}>{t("favorites.empty_hint")}</Text>
         </View>
       ) : (
         <FlatList

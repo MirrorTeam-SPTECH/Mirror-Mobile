@@ -12,19 +12,11 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { getOrders, formatPrice, getNutritionRanking } from "../services/api";
 
 const PRIMARY = "#C41E3A";
 const BG = "#FAF5EC";
-
-const STATUS_LABEL = {
-  pending_payment: "Aguardando Pagamento",
-  paid:            "Pago",
-  preparing:       "Preparando",
-  ready:           "Pronto para Retirada",
-  delivered:       "Entregue",
-  cancelled:       "Cancelado",
-};
 
 const STATUS_COLOR = {
   pending_payment: "#F39C12",
@@ -38,6 +30,7 @@ const STATUS_COLOR = {
 const NUTRITION_ELIGIBLE = new Set(["paid", "preparing", "ready", "delivered"]);
 
 function NutritionModal({ orderId, onClose }) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
@@ -45,7 +38,7 @@ function NutritionModal({ orderId, onClose }) {
   useEffect(() => {
     getNutritionRanking(orderId)
       .then(setData)
-      .catch((err) => setError(err.message || "Não foi possível carregar."))
+      .catch((err) => setError(err.message || t("order_history.modal_load_error")))
       .finally(() => setLoading(false));
   }, [orderId]);
 
@@ -54,7 +47,7 @@ function NutritionModal({ orderId, onClose }) {
       <View style={modal.overlay}>
         <View style={modal.sheet}>
           <View style={modal.header}>
-            <Text style={modal.title}>Nutrição do Pedido</Text>
+            <Text style={modal.title}>{t("order_history.modal_title")}</Text>
             <TouchableOpacity onPress={onClose} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
               <Ionicons name="close" size={24} color="#2A1E14" />
             </TouchableOpacity>
@@ -63,7 +56,7 @@ function NutritionModal({ orderId, onClose }) {
           {loading && (
             <View style={modal.center}>
               <ActivityIndicator size="large" color={PRIMARY} />
-              <Text style={modal.hint}>Consultando nutricionista...</Text>
+              <Text style={modal.hint}>{t("order_history.modal_loading")}</Text>
             </View>
           )}
 
@@ -82,7 +75,7 @@ function NutritionModal({ orderId, onClose }) {
                 </View>
               ) : null}
 
-              <Text style={modal.sectionLabel}>Ranking calórico</Text>
+              <Text style={modal.sectionLabel}>{t("order_history.modal_ranking")}</Text>
               {data.ranking.map((item) => (
                 <View key={item.product_id} style={modal.rankRow}>
                   <View style={modal.rankBadge}>
@@ -109,9 +102,7 @@ function NutritionModal({ orderId, onClose }) {
                 </View>
               ))}
 
-              <Text style={modal.disclaimer}>
-                * Valores orientativos. Podem variar conforme preparo e customizações.
-              </Text>
+              <Text style={modal.disclaimer}>{t("order_history.modal_disclaimer")}</Text>
             </ScrollView>
           )}
         </View>
@@ -121,9 +112,18 @@ function NutritionModal({ orderId, onClose }) {
 }
 
 function OrderCard({ order, onPress, onNutritionPress }) {
+  const { t, i18n } = useTranslation();
+  const STATUS_LABEL = {
+    pending_payment: t("order_history.status_pending"),
+    paid:            t("order_history.status_paid"),
+    preparing:       t("order_history.status_preparing"),
+    ready:           t("order_history.status_ready"),
+    delivered:       t("order_history.status_delivered"),
+    cancelled:       t("order_history.status_cancelled"),
+  };
   const color = STATUS_COLOR[order.status] || "#999";
   const label = STATUS_LABEL[order.status] || order.status;
-  const date = new Date(order.created_at).toLocaleDateString("pt-BR", {
+  const date = new Date(order.created_at).toLocaleDateString(i18n.language, {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -134,7 +134,7 @@ function OrderCard({ order, onPress, onNutritionPress }) {
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
       <View style={styles.cardHeader}>
-        <Text style={styles.orderId}>Pedido #{order.id}</Text>
+        <Text style={styles.orderId}>{t("order_history.order_number", { id: order.id })}</Text>
         <Text style={[styles.statusBadge, { color }]}>{label}</Text>
       </View>
       <View style={styles.cardBody}>
@@ -145,7 +145,7 @@ function OrderCard({ order, onPress, onNutritionPress }) {
           </Text>
         )}
         {order.pickup_code && (
-          <Text style={styles.pickupCode}>Código: {order.pickup_code}</Text>
+          <Text style={styles.pickupCode}>{t("order_history.pickup_code", { code: order.pickup_code })}</Text>
         )}
       </View>
       <View style={styles.cardFooter}>
@@ -158,7 +158,7 @@ function OrderCard({ order, onPress, onNutritionPress }) {
               activeOpacity={0.75}
             >
               <Ionicons name="leaf-outline" size={13} color={PRIMARY} />
-              <Text style={styles.nutritionBtnText}>Nutrição</Text>
+              <Text style={styles.nutritionBtnText}>{t("order_history.btn_nutrition")}</Text>
             </TouchableOpacity>
           )}
           <Text style={styles.arrow}>›</Text>
@@ -169,6 +169,7 @@ function OrderCard({ order, onPress, onNutritionPress }) {
 }
 
 export default function OrderHistoryScreen({ navigation }) {
+  const { t } = useTranslation();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -183,7 +184,7 @@ export default function OrderHistoryScreen({ navigation }) {
       setOrders(data.filter((o) => !HIDE_STATUSES.has(o.status)));
       setError(null);
     } catch (err) {
-      setError("Não foi possível carregar seus pedidos.");
+      setError(t("order_history.load_error"));
     } finally {
       setLoading(false);
     }
@@ -208,21 +209,21 @@ export default function OrderHistoryScreen({ navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Meus Pedidos</Text>
+        <Text style={styles.headerTitle}>{t("order_history.title")}</Text>
       </View>
 
       {error ? (
         <View style={styles.center}>
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={fetchOrders}>
-            <Text style={styles.retryText}>Tentar novamente</Text>
+            <Text style={styles.retryText}>{t("common.retry")}</Text>
           </TouchableOpacity>
         </View>
       ) : orders.length === 0 ? (
         <View style={styles.center}>
           <Text style={styles.emptyIcon}>📋</Text>
-          <Text style={styles.emptyTitle}>Nenhum pedido ainda</Text>
-          <Text style={styles.emptyHint}>Seus pedidos vão aparecer aqui</Text>
+          <Text style={styles.emptyTitle}>{t("order_history.empty_title")}</Text>
+          <Text style={styles.emptyHint}>{t("order_history.empty_hint")}</Text>
         </View>
       ) : (
         <FlatList

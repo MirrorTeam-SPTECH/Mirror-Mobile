@@ -11,6 +11,8 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
+import { setLanguage } from "../i18n";
 import { useAuth } from "../context/AuthContext";
 import { useFavorites } from "../context/FavoritesContext";
 import { getOrders } from "../services/api";
@@ -24,27 +26,28 @@ const MUTED = "#7A6A56";
 const GOLD = "#FFD66B";
 const SERIF = Platform.select({ ios: "Georgia", android: "serif", default: "Georgia" });
 
-const MENU_ITEMS = [
-  { key: "analytics", label: "Análises",               icon: "bar-chart-outline", screen: "Analytics"    },
-  { key: "orders",    label: "Meus Pedidos",            icon: "receipt-outline",   screen: "OrderHistory" },
-  { key: "nearby",    label: "Perto de Você",           icon: "location-outline",  screen: "Nearby"       },
-  { key: "grill",     label: "Churrasqueiro de Bolso",  icon: "flame-outline",     screen: "GrillAdvisor" },
-  { key: "scanner",   label: "Scanner Comparativo",     icon: "scan-outline",      screen: "LabelScanner" },
-];
-
-function statusLabel(count) {
-  if (count >= 16) return "Fiel";
-  if (count >= 6) return "Habitual";
-  return "Novato";
+function statusLabel(count, t) {
+  if (count >= 16) return t("profile.status_loyal");
+  if (count >= 6) return t("profile.status_regular");
+  return t("profile.status_new");
 }
 
 export default function ProfileScreen({ navigation }) {
+  const { t, i18n } = useTranslation();
   const { user, logout } = useAuth();
   const { favoriteIds } = useFavorites();
   const [ordersCount, setOrdersCount] = useState(null);
 
+  const MENU_ITEMS = [
+    { key: "analytics", label: t("profile.menu_analytics"), icon: "bar-chart-outline", screen: "Analytics" },
+    { key: "orders",    label: t("profile.menu_orders"),    icon: "receipt-outline",   screen: "OrderHistory" },
+    { key: "nearby",    label: t("profile.menu_nearby"),    icon: "location-outline",  screen: "Nearby" },
+    { key: "grill",     label: t("profile.menu_grill"),     icon: "flame-outline",     screen: "GrillAdvisor" },
+    { key: "scanner",   label: t("profile.menu_scanner"),   icon: "scan-outline",      screen: "LabelScanner" },
+  ];
+
   const initial = user?.name ? user.name.charAt(0).toUpperCase() : "U";
-  const firstName = user?.name ? user.name.split(" ")[0] : "Visitante";
+  const firstName = user?.name ? user.name.split(" ")[0] : t("profile.guest");
 
   useFocusEffect(
     useCallback(() => {
@@ -64,6 +67,11 @@ export default function ProfileScreen({ navigation }) {
     navigation.navigate("Login");
   };
 
+  const toggleLanguage = () => {
+    const next = i18n.language === "pt-BR" ? "en" : "pt-BR";
+    setLanguage(next);
+  };
+
   const count = ordersCount ?? 0;
 
   return (
@@ -71,8 +79,8 @@ export default function ProfileScreen({ navigation }) {
       <StatusBar style="dark" />
 
       <View style={styles.topBar}>
-        <Text style={styles.topLabel}>Portal do Churras</Text>
-        <Text style={styles.topTitle}>Perfil</Text>
+        <Text style={styles.topLabel}>{t("common.app_name")}</Text>
+        <Text style={styles.topTitle}>{t("profile.title")}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -83,7 +91,7 @@ export default function ProfileScreen({ navigation }) {
               <Text style={styles.avatarText}>{initial}</Text>
             </View>
           </View>
-          <Text style={styles.greeting}>Olá, {firstName}.</Text>
+          <Text style={styles.greeting}>{t("profile.greeting", { name: firstName })}</Text>
           {!!user?.email && <Text style={styles.email}>{user.email}</Text>}
         </View>
 
@@ -91,15 +99,15 @@ export default function ProfileScreen({ navigation }) {
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{ordersCount === null ? "—" : String(count)}</Text>
-            <Text style={styles.statLabel}>PEDIDOS</Text>
+            <Text style={styles.statLabel}>{t("profile.stats_orders")}</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{favoriteIds.size}</Text>
-            <Text style={styles.statLabel}>FAVORITOS</Text>
+            <Text style={styles.statLabel}>{t("profile.stats_favorites")}</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={[styles.statValue, styles.statSerifItalic]}>{statusLabel(count)}</Text>
-            <Text style={styles.statLabel}>STATUS</Text>
+            <Text style={[styles.statValue, styles.statSerifItalic]}>{statusLabel(count, t)}</Text>
+            <Text style={styles.statLabel}>{t("profile.stats_status")}</Text>
           </View>
         </View>
 
@@ -111,20 +119,21 @@ export default function ProfileScreen({ navigation }) {
         >
           <View style={styles.retroBadge}>
             <Text style={styles.retroBadgeNumber}>{count}</Text>
-            <Text style={styles.retroBadgeLabel}>PEDIDOS</Text>
+            <Text style={styles.retroBadgeLabel}>{t("profile.stats_orders")}</Text>
           </View>
           <View style={styles.retroInfo}>
-            <Text style={styles.retroEyebrow}>SUA RETROSPECTIVA</Text>
+            <Text style={styles.retroEyebrow}>{t("profile.retro_eyebrow")}</Text>
             <Text style={styles.retroTitle}>
-              2026, <Text style={styles.retroTitleAccent}>na chapa</Text>
+              {t("profile.retro_title_year")}{" "}
+              <Text style={styles.retroTitleAccent}>{t("profile.retro_title_accent")}</Text>
             </Text>
-            <Text style={styles.retroSub}>Ranking, hábitos, top lanches →</Text>
+            <Text style={styles.retroSub}>{t("profile.retro_sub")}</Text>
           </View>
           <Ionicons name="chevron-forward" size={16} color="rgba(250,245,236,0.7)" />
         </TouchableOpacity>
 
         {/* Menu */}
-        <Text style={styles.sectionTitle}>Atalhos</Text>
+        <Text style={styles.sectionTitle}>{t("profile.shortcuts")}</Text>
         <View style={styles.menuCard}>
           {MENU_ITEMS.map((item, index) => (
             <TouchableOpacity
@@ -142,13 +151,20 @@ export default function ProfileScreen({ navigation }) {
           ))}
         </View>
 
+        {/* Language toggle */}
+        <TouchableOpacity style={styles.langBtn} onPress={toggleLanguage} activeOpacity={0.8}>
+          <Ionicons name="language-outline" size={18} color={SUBTLE} />
+          <Text style={styles.langText}>{t("profile.language")}</Text>
+          <Text style={styles.langValue}>{i18n.language === "pt-BR" ? "PT-BR" : "EN"}</Text>
+        </TouchableOpacity>
+
         {/* Logout */}
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.85}>
           <Ionicons name="log-out-outline" size={18} color="#8A2716" />
-          <Text style={styles.logoutText}>Sair da conta</Text>
+          <Text style={styles.logoutText}>{t("profile.logout")}</Text>
         </TouchableOpacity>
 
-        <Text style={styles.version}>Portal do Churras · v1.0</Text>
+        <Text style={styles.version}>{t("profile.version")}</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -241,7 +257,7 @@ const styles = StyleSheet.create({
   },
   menuCard: {
     backgroundColor: "#fff", borderRadius: 14,
-    borderWidth: 1, borderColor: LINE, overflow: "hidden", marginBottom: 24,
+    borderWidth: 1, borderColor: LINE, overflow: "hidden", marginBottom: 16,
   },
   menuItem: {
     flexDirection: "row", alignItems: "center",
@@ -254,6 +270,15 @@ const styles = StyleSheet.create({
     alignItems: "center", justifyContent: "center",
   },
   menuText: { flex: 1, fontSize: 15, color: INK, fontWeight: "500" },
+
+  langBtn: {
+    flexDirection: "row", alignItems: "center",
+    gap: 12, paddingVertical: 14, paddingHorizontal: 16,
+    borderWidth: 1, borderColor: LINE, borderRadius: 14,
+    backgroundColor: "#fff", marginBottom: 12,
+  },
+  langText: { flex: 1, fontSize: 15, color: INK, fontWeight: "500" },
+  langValue: { fontSize: 13, color: SUBTLE, fontWeight: "600" },
 
   logoutBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",

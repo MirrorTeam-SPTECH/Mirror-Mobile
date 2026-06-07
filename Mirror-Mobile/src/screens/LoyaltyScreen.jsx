@@ -18,6 +18,7 @@ import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import { getLoyalty } from "../services/api";
 
@@ -58,13 +59,13 @@ function StampGrid({ stampsInCycle, allFilled = false }) {
   );
 }
 
-function formatDate(dateStr) {
+function formatDate(dateStr, lang) {
   const d = new Date(dateStr);
-  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+  return d.toLocaleDateString(lang || "pt-BR", { day: "2-digit", month: "short", year: "numeric" });
 }
 
 // ─── Web-only canvas download ─────────────────────────────────────────────────
-function downloadVoucherWeb(userName, cycles) {
+function downloadVoucherWeb(userName, cycles, texts) {
   const W = 700, H = 420;
   const canvas = document.createElement("canvas");
   canvas.width = W * 2;
@@ -96,7 +97,7 @@ function downloadVoucherWeb(userName, cycles) {
   // Tagline
   ctx.fillStyle = "rgba(250,245,236,0.5)";
   ctx.font = "11px Arial";
-  ctx.fillText("CARTÃO FIDELIDADE", 28, 52);
+  ctx.fillText(texts.cardLabel, 28, 52);
 
   // Cycles badge top-right
   ctx.fillStyle = "rgba(255,214,107,0.15)";
@@ -113,14 +114,13 @@ function downloadVoucherWeb(userName, cycles) {
   // Name
   ctx.fillStyle = "#FAF5EC";
   ctx.font = "italic bold 28px Georgia";
-  ctx.fillText("Parabéns, " + (userName || "Cliente") + "!", 28, 120);
+  ctx.fillText(texts.congrats + " " + (userName || "Cliente") + "!", 28, 120);
 
   // Congrats text
   ctx.fillStyle = "rgba(250,245,236,0.75)";
   ctx.font = "13px Arial";
-  const msg = `O Portal do Churras fica feliz por você ter passado aqui ${TOTAL_STAMPS} vezes`;
-  ctx.fillText(msg, 28, 148);
-  ctx.fillText("e gostaria de te presentear com um combo grátis!", 28, 166);
+  ctx.fillText(texts.messageLine1, 28, 148);
+  ctx.fillText(texts.messageLine2, 28, 166);
 
   // Divider
   ctx.strokeStyle = "rgba(255,214,107,0.2)";
@@ -143,20 +143,20 @@ function downloadVoucherWeb(userName, cycles) {
   ctx.fillStyle = "#FFD66B";
   ctx.font = "bold 15px Arial";
   ctx.textAlign = "center";
-  ctx.fillText("🍔  1 COMBO GRÁTIS  🍟", W / 2, 238);
+  ctx.fillText("🍔  " + texts.prizeTitle + "  🍟", W / 2, 238);
   ctx.fillStyle = "rgba(250,245,236,0.55)";
   ctx.font = "12px Arial";
-  ctx.fillText("Hambúrguer + Bebida + Acompanhamento", W / 2, 260);
+  ctx.fillText(texts.prizeHint, W / 2, 260);
 
   // Footer
   ctx.textAlign = "left";
   ctx.fillStyle = "rgba(250,245,236,0.35)";
   ctx.font = "11px Arial";
-  ctx.fillText("Apresente este cartão no balcão ao retirar seu pedido.", 28, 316);
+  ctx.fillText(texts.instruction, 28, 316);
 
   // Date
-  const today = new Date().toLocaleDateString("pt-BR");
-  ctx.fillText("Gerado em: " + today, 28, 334);
+  const today = new Date().toLocaleDateString(texts.lang || "pt-BR");
+  ctx.fillText((texts.generatedOn || "Gerado em: ") + today, 28, 334);
 
   // Gold bottom bar
   ctx.fillStyle = "#C8920A";
@@ -170,6 +170,7 @@ function downloadVoucherWeb(userName, cycles) {
 
 // ─── Reward Modal ─────────────────────────────────────────────────────────────
 function RewardModal({ visible, onClose, cycles, userName }) {
+  const { t, i18n } = useTranslation();
   const { width: W, height: H } = useWindowDimensions();
   const slideAnim  = useRef(new Animated.Value(H)).current;
   const overlayAnim = useRef(new Animated.Value(0)).current;
@@ -207,23 +208,30 @@ function RewardModal({ visible, onClose, cycles, userName }) {
     ]).start(onClose);
   };
 
-  const voucherText =
-    `🍔 Ganhei um combo grátis no Portal do Churras!\n\n` +
-    `Depois de ${cycles * TOTAL_STAMPS} hambúrgueres devorados, chegou a hora de comemorar 🎉\n\n` +
-    `#PortalDoChurras #ComboGrátis`;
+  const voucherText = t("loyalty.share_text", { burgers: cycles * TOTAL_STAMPS });
 
   const handleShare = async () => {
     try {
-      await Share.share({ message: voucherText, title: "Meu Combo Grátis – Portal do Churras" });
+      await Share.share({ message: voucherText, title: t("loyalty.share_title") });
     } catch (_) {}
   };
 
   const handleSave = () => {
     if (Platform.OS === "web") {
-      downloadVoucherWeb(userName, cycles);
+      downloadVoucherWeb(userName, cycles, {
+        cardLabel:    t("loyalty.card_label"),
+        congrats:     t("loyalty.modal_congrats"),
+        messageLine1: t("loyalty.modal_message_line1"),
+        messageLine2: t("loyalty.modal_message_line2"),
+        prizeTitle:   t(cycles === 1 ? "loyalty.modal_prize_one" : "loyalty.modal_prize_other", { count: cycles }).toUpperCase(),
+        prizeHint:    t("loyalty.modal_prize_hint"),
+        instruction:  t("loyalty.modal_instruction"),
+        generatedOn:  t("loyalty.generated_on"),
+        lang:         i18n.language,
+      });
     } else {
-      Share.share({ message: voucherText, title: "Combo Grátis – Portal do Churras" })
-        .catch(() => Alert.alert("", "Tire um print da tela para salvar o cartão!"));
+      Share.share({ message: voucherText, title: t("loyalty.share_title") })
+        .catch(() => Alert.alert("", t("loyalty.save_screenshot")));
     }
   };
 
@@ -254,7 +262,7 @@ function RewardModal({ visible, onClose, cycles, userName }) {
           </TouchableOpacity>
 
           {/* Eyebrow */}
-          <Text style={rm.eyebrow}>PORTAL DO CHURRAS · FIDELIDADE</Text>
+          <Text style={rm.eyebrow}>{t("loyalty.modal_eyebrow")}</Text>
 
           {/* Avatar */}
           <View style={rm.avatarWrap}>
@@ -277,26 +285,22 @@ function RewardModal({ visible, onClose, cycles, userName }) {
 
           {/* Heading */}
           <Text style={rm.heading}>
-            Parabéns,{"\n"}
+            {t("loyalty.modal_congrats")}{"\n"}
             <Text style={rm.headingAccent}>{userName || "Cliente"}!</Text>
           </Text>
 
           {/* Message */}
-          <Text style={rm.message}>
-            O Portal do Churras fica feliz por você ter passado aqui{" "}
-            <Text style={{ color: "#FFD66B", fontWeight: "700" }}>10 vezes</Text> e
-            gostaria de te presentear com um presente especial.
-          </Text>
+          <Text style={rm.message}>{t("loyalty.modal_message")}</Text>
 
           {/* Prize box */}
           <View style={rm.prizeBox}>
             <Text style={rm.prizeEmoji}>🍔</Text>
             <View style={rm.prizeInfo}>
-              <Text style={rm.prizeLabel}>VOCÊ GANHOU</Text>
+              <Text style={rm.prizeLabel}>{t("loyalty.modal_earned")}</Text>
               <Text style={rm.prizeValue}>
-                {cycles} combo{cycles !== 1 ? "s" : ""} grátis
+                {t(cycles === 1 ? "loyalty.modal_prize_one" : "loyalty.modal_prize_other", { count: cycles })}
               </Text>
-              <Text style={rm.prizeHint}>Hambúrguer + Bebida + Acompanhamento</Text>
+              <Text style={rm.prizeHint}>{t("loyalty.modal_prize_hint")}</Text>
             </View>
           </View>
 
@@ -304,20 +308,18 @@ function RewardModal({ visible, onClose, cycles, userName }) {
           <StampGrid stampsInCycle={0} allFilled />
 
           {/* Instruction */}
-          <Text style={rm.instruction}>
-            Apresente este cartão no balcão ao retirar seu próximo pedido.
-          </Text>
+          <Text style={rm.instruction}>{t("loyalty.modal_instruction")}</Text>
 
           {/* Action buttons */}
           <View style={rm.actions}>
             <TouchableOpacity style={rm.btnSecondary} onPress={handleShare} activeOpacity={0.85}>
               <Ionicons name="share-social-outline" size={17} color={INK} />
-              <Text style={rm.btnSecondaryText}>Compartilhar</Text>
+              <Text style={rm.btnSecondaryText}>{t("loyalty.modal_share")}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={rm.btnPrimary} onPress={handleSave} activeOpacity={0.85}>
               <Ionicons name="download-outline" size={17} color="#fff" />
               <Text style={rm.btnPrimaryText}>
-                {Platform.OS === "web" ? "Baixar PNG" : "Salvar"}
+                {Platform.OS === "web" ? t("loyalty.modal_save_web") : t("loyalty.modal_save_native")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -332,6 +334,7 @@ function RewardModal({ visible, onClose, cycles, userName }) {
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function LoyaltyScreen({ navigation }) {
+  const { t, i18n } = useTranslation();
   const { isLoggedIn, user } = useAuth();
   const [status, setStatus]       = useState("idle");
   const [loyalty, setLoyalty]     = useState(null);
@@ -379,13 +382,13 @@ export default function LoyaltyScreen({ navigation }) {
         <TopBar />
         <View style={styles.center}>
           <Ionicons name="lock-closed-outline" size={52} color={SUBTLE} />
-          <Text style={styles.stateTitle}>Faça login para ver seu cartão fidelidade</Text>
+          <Text style={styles.stateTitle}>{t("loyalty.login_prompt")}</Text>
           <TouchableOpacity
             style={styles.loginBtn}
             onPress={() => navigation.navigate("Login")}
             activeOpacity={0.85}
           >
-            <Text style={styles.loginBtnText}>Entrar</Text>
+            <Text style={styles.loginBtnText}>{t("loyalty.btn_login")}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -411,9 +414,9 @@ export default function LoyaltyScreen({ navigation }) {
         <TopBar />
         <View style={styles.center}>
           <Ionicons name="alert-circle-outline" size={52} color={SUBTLE} />
-          <Text style={styles.stateTitle}>Erro ao carregar fidelidade</Text>
+          <Text style={styles.stateTitle}>{t("loyalty.load_error")}</Text>
           <TouchableOpacity style={styles.retryBtn} onPress={load} activeOpacity={0.85}>
-            <Text style={styles.retryText}>Tentar novamente</Text>
+            <Text style={styles.retryText}>{t("loyalty.btn_retry")}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -442,11 +445,9 @@ export default function LoyaltyScreen({ navigation }) {
             </View>
             <View style={styles.rewardBody}>
               <Text style={styles.rewardTitle}>
-                {cycles_completed === 1
-                  ? "Você ganhou 1 combo grátis!"
-                  : `Você ganhou ${cycles_completed} combos grátis!`}
+                {t(cycles_completed === 1 ? "loyalty.reward_one" : "loyalty.reward_other", { count: cycles_completed })}
               </Text>
-              <Text style={styles.rewardHint}>Toque para ver o seu cartão premiado →</Text>
+              <Text style={styles.rewardHint}>{t("loyalty.reward_tap")}</Text>
             </View>
           </TouchableOpacity>
         )}
@@ -455,8 +456,8 @@ export default function LoyaltyScreen({ navigation }) {
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <View>
-              <Text style={styles.cardLabel}>CARTÃO FIDELIDADE</Text>
-              <Text style={styles.cardTitle}>Portal do Churras</Text>
+              <Text style={styles.cardLabel}>{t("loyalty.card_label")}</Text>
+              <Text style={styles.cardTitle}>{t("common.app_name")}</Text>
             </View>
             <View style={styles.progressBadge}>
               <Text style={styles.progressCount}>{stamps_in_cycle}</Text>
@@ -468,28 +469,25 @@ export default function LoyaltyScreen({ navigation }) {
 
           <Text style={styles.cardFooter}>
             {stamps_in_cycle === 0 && total_stamps === 0
-              ? "Peça seu primeiro hambúrguer para começar!"
+              ? t("loyalty.footer_first")
               : stamps_in_cycle === 0
-              ? "Novo ciclo! Continue pedindo hambúrgueres."
+              ? t("loyalty.footer_new_cycle")
               : remaining === 1
-              ? "Falta só 1 hambúrguer para ganhar o combo! 🔥"
-              : `Faltam ${remaining} hambúrgueres para ganhar o combo grátis`}
+              ? t("loyalty.footer_last_stamp")
+              : t("loyalty.footer_remaining", { count: remaining })}
           </Text>
         </View>
 
         {/* Rule card */}
         <View style={styles.ruleCard}>
           <Ionicons name="information-circle-outline" size={18} color={SUBTLE} style={{ marginTop: 1 }} />
-          <Text style={styles.ruleText}>
-            Apenas pedidos com pelo menos 1 hambúrguer contam como carimbo.
-            Bebidas e acompanhamentos sozinhos não contam.
-          </Text>
+          <Text style={styles.ruleText}>{t("loyalty.rule")}</Text>
         </View>
 
         {/* History */}
         {recent_stamps.length > 0 && (
           <>
-            <Text style={styles.sectionTitle}>Histórico de carimbos</Text>
+            <Text style={styles.sectionTitle}>{t("loyalty.history_title")}</Text>
             <View style={styles.historyCard}>
               {recent_stamps.map((stamp, index) => (
                 <View
@@ -503,8 +501,8 @@ export default function LoyaltyScreen({ navigation }) {
                     <Ionicons name="flame" size={16} color={PRIMARY} />
                   </View>
                   <View style={styles.historyBody}>
-                    <Text style={styles.historyLabel}>Pedido #{stamp.order_id}</Text>
-                    <Text style={styles.historyDate}>{formatDate(stamp.created_at)}</Text>
+                    <Text style={styles.historyLabel}>{t("loyalty.order_stamp", { id: stamp.order_id })}</Text>
+                    <Text style={styles.historyDate}>{formatDate(stamp.created_at, i18n.language)}</Text>
                   </View>
                   <View style={styles.historyStampDot} />
                 </View>
@@ -515,19 +513,17 @@ export default function LoyaltyScreen({ navigation }) {
 
         {recent_stamps.length === 0 && (
           <>
-            <Text style={styles.sectionTitle}>Sem carimbos ainda</Text>
+            <Text style={styles.sectionTitle}>{t("loyalty.no_stamps")}</Text>
             <View style={styles.emptyCard}>
               <Ionicons name="storefront-outline" size={22} color={PRIMARY} style={{ marginBottom: 8 }} />
-              <Text style={styles.emptyText}>
-                Faça seu primeiro pedido com hambúrguer e ganhe o primeiro carimbo!
-              </Text>
+              <Text style={styles.emptyText}>{t("loyalty.empty_text")}</Text>
             </View>
           </>
         )}
 
         <TouchableOpacity style={styles.refreshBtn} onPress={load} activeOpacity={0.8}>
           <Ionicons name="refresh-outline" size={16} color={PRIMARY} />
-          <Text style={styles.refreshText}>Atualizar</Text>
+          <Text style={styles.refreshText}>{t("loyalty.btn_refresh")}</Text>
         </TouchableOpacity>
 
       </ScrollView>
@@ -545,6 +541,7 @@ export default function LoyaltyScreen({ navigation }) {
 
 // ─── TopBar ───────────────────────────────────────────────────────────────────
 function TopBar() {
+  const { t } = useTranslation();
   const nav = useNavigation();
   return (
     <View style={styles.topBar}>
@@ -556,8 +553,8 @@ function TopBar() {
         <Ionicons name="chevron-back" size={26} color={INK} />
       </TouchableOpacity>
       <View style={styles.topBarText}>
-        <Text style={styles.topLabel}>Portal do Churras</Text>
-        <Text style={styles.topTitle}>Fidelidade</Text>
+        <Text style={styles.topLabel}>{t("common.app_name")}</Text>
+        <Text style={styles.topTitle}>{t("loyalty.title")}</Text>
       </View>
     </View>
   );

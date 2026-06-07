@@ -9,16 +9,8 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { getOrderById, formatPrice } from "../services/api";
-
-const STATUS_LABEL = {
-  pending_payment: "Aguardando Pagamento",
-  paid:            "Pagamento Confirmado",
-  preparing:       "Preparando",
-  ready:           "Pronto para Retirada",
-  delivered:       "Entregue",
-  cancelled:       "Cancelado",
-};
 
 const STATUS_COLOR = {
   pending_payment: "#F39C12",
@@ -33,7 +25,17 @@ const TERMINAL_STATUSES = ["delivered", "cancelled"];
 const POLL_INTERVAL_MS = 5000;
 
 export default function OrderTrackingScreen({ route, navigation }) {
+  const { t } = useTranslation();
   const { orderId } = route.params;
+
+  const STATUS_LABEL = {
+    pending_payment: t("order_tracking.status_pending"),
+    paid:            t("order_tracking.status_paid"),
+    preparing:       t("order_tracking.status_preparing"),
+    ready:           t("order_tracking.status_ready"),
+    delivered:       t("order_tracking.status_delivered"),
+    cancelled:       t("order_tracking.status_cancelled"),
+  };
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -46,12 +48,11 @@ export default function OrderTrackingScreen({ route, navigation }) {
       setOrder(data);
       setError(null);
 
-      // Para de fazer polling quando chega num status terminal
       if (TERMINAL_STATUSES.includes(data.status)) {
         clearInterval(intervalRef.current);
       }
     } catch (err) {
-      setError("Não foi possível carregar o pedido.");
+      setError(t("order_tracking.load_error"));
     } finally {
       setLoading(false);
     }
@@ -67,7 +68,7 @@ export default function OrderTrackingScreen({ route, navigation }) {
     return (
       <View style={[styles.container, styles.center]}>
         <ActivityIndicator size="large" color="#C41E3A" />
-        <Text style={styles.loadingText}>Carregando pedido...</Text>
+        <Text style={styles.loadingText}>{t("order_tracking.loading")}</Text>
       </View>
     );
   }
@@ -75,9 +76,9 @@ export default function OrderTrackingScreen({ route, navigation }) {
   if (error || !order) {
     return (
       <View style={[styles.container, styles.center]}>
-        <Text style={styles.errorText}>{error || "Pedido não encontrado"}</Text>
+        <Text style={styles.errorText}>{error || t("order_tracking.not_found")}</Text>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate("Main")}>
-          <Text style={styles.backButtonText}>Voltar ao início</Text>
+          <Text style={styles.backButtonText}>{t("order_tracking.btn_home")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -95,32 +96,32 @@ export default function OrderTrackingScreen({ route, navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Ionicons name="chevron-back" size={26} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Acompanhar Pedido</Text>
+        <Text style={styles.headerTitle}>{t("order_tracking.title")}</Text>
         <Text style={styles.orderId}>#{order.id}</Text>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Status */}
         <View style={[styles.statusCard, { borderLeftColor: statusColor }]}>
-          <Text style={styles.statusCardLabel}>Status</Text>
+          <Text style={styles.statusCardLabel}>{t("order_tracking.status_label")}</Text>
           <Text style={[styles.statusText, { color: statusColor }]}>{statusLabel}</Text>
           {!isTerminal && (
-            <Text style={styles.pollingHint}>Atualizando automaticamente...</Text>
+            <Text style={styles.pollingHint}>{t("order_tracking.polling_hint")}</Text>
           )}
         </View>
 
         {/* Código de retirada */}
         {order.pickup_code && order.status !== "cancelled" && (
           <View style={styles.pickupCard}>
-            <Text style={styles.pickupLabel}>Código de Retirada</Text>
+            <Text style={styles.pickupLabel}>{t("order_tracking.pickup_label")}</Text>
             <Text style={styles.pickupCode}>{order.pickup_code}</Text>
-            <Text style={styles.pickupHint}>Mostre este código na retirada</Text>
+            <Text style={styles.pickupHint}>{t("order_tracking.pickup_hint")}</Text>
           </View>
         )}
 
         {/* Itens do pedido */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Itens</Text>
+          <Text style={styles.sectionTitle}>{t("order_tracking.items_title")}</Text>
           {order.items.map((item) => (
             <View key={item.id} style={styles.orderItem}>
               <Text style={styles.itemName}>
@@ -138,7 +139,7 @@ export default function OrderTrackingScreen({ route, navigation }) {
 
         {/* Total */}
         <View style={styles.totalCard}>
-          <Text style={styles.totalLabel}>Total Pago</Text>
+          <Text style={styles.totalLabel}>{t("order_tracking.total_paid")}</Text>
           <Text style={styles.totalValue}>{formatPrice(order.total_cents)}</Text>
         </View>
 
@@ -148,7 +149,7 @@ export default function OrderTrackingScreen({ route, navigation }) {
             style={styles.homeButton}
             onPress={() => navigation.navigate("Main")}
           >
-            <Text style={styles.homeButtonText}>Voltar ao Início</Text>
+            <Text style={styles.homeButtonText}>{t("order_tracking.btn_home")}</Text>
           </TouchableOpacity>
         )}
 

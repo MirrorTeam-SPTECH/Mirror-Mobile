@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
+import { useTranslation } from "react-i18next";
 import { analyzeLabelScanner, formatPrice } from "../services/api";
 import WebCameraModal from "../components/WebCameraModal";
 
@@ -20,6 +21,7 @@ const PRIMARY = "#D91C1C";
 const BG = "#FAF5EC";
 
 export default function LabelScannerScreen({ navigation }) {
+  const { t } = useTranslation();
   const [image, setImage] = useState(null);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -37,14 +39,14 @@ export default function LabelScannerScreen({ navigation }) {
     if (source === "camera") {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert("Permissão necessária", "Precisamos de acesso à câmera.");
+        Alert.alert(t("scanner.perm_title"), t("scanner.perm_camera"));
         return;
       }
       scanResult = await ImagePicker.launchCameraAsync(options);
     } else {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert("Permissão necessária", "Precisamos de acesso à galeria.");
+        Alert.alert(t("scanner.perm_title"), t("scanner.perm_gallery"));
         return;
       }
       scanResult = await ImagePicker.launchImageLibraryAsync({
@@ -74,7 +76,7 @@ export default function LabelScannerScreen({ navigation }) {
       const data = await analyzeLabelScanner(image.base64, image.mimeType);
       setResult(data);
     } catch (err) {
-      Alert.alert("Erro", err.message || "Não foi possível escanear o rótulo.");
+      Alert.alert(t("scanner.error_title"), err.message || t("scanner.error_msg"));
     } finally {
       setLoading(false);
     }
@@ -92,13 +94,11 @@ export default function LabelScannerScreen({ navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color="#2A1E14" />
         </TouchableOpacity>
-        <Text style={styles.title}>Scanner Comparativo</Text>
+        <Text style={styles.title}>{t("scanner.title")}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={styles.subtitle}>
-          Fotografe o rótulo nutricional de um lanche concorrente e encontre o equivalente no Portal do Churras
-        </Text>
+        <Text style={styles.subtitle}>{t("scanner.subtitle")}</Text>
 
         {image ? (
           <View style={styles.imageArea}>
@@ -107,7 +107,7 @@ export default function LabelScannerScreen({ navigation }) {
         ) : (
           <View style={styles.imagePlaceholder}>
             <Ionicons name="scan" size={48} color="#B8A898" />
-            <Text style={styles.imagePlaceholderText}>Adicione uma foto do rótulo</Text>
+            <Text style={styles.imagePlaceholderText}>{t("scanner.add_photo")}</Text>
           </View>
         )}
 
@@ -115,11 +115,11 @@ export default function LabelScannerScreen({ navigation }) {
           <View style={styles.pickRow}>
             <TouchableOpacity style={styles.pickBtn} onPress={() => pickImage("camera")} activeOpacity={0.8}>
               <Ionicons name="camera-outline" size={20} color={PRIMARY} />
-              <Text style={styles.pickBtnText}>Câmera</Text>
+              <Text style={styles.pickBtnText}>{t("scanner.btn_camera")}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.pickBtn} onPress={() => pickImage("gallery")} activeOpacity={0.8}>
               <Ionicons name="images-outline" size={20} color={PRIMARY} />
-              <Text style={styles.pickBtnText}>Galeria</Text>
+              <Text style={styles.pickBtnText}>{t("scanner.btn_gallery")}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -137,18 +137,18 @@ export default function LabelScannerScreen({ navigation }) {
               ) : (
                 <>
                   <Ionicons name="search" size={20} color="#fff" style={{ marginRight: 8 }} />
-                  <Text style={styles.scanBtnText}>Analisar rótulo</Text>
+                  <Text style={styles.scanBtnText}>{t("scanner.btn_scan")}</Text>
                 </>
               )}
             </TouchableOpacity>
             <TouchableOpacity style={styles.changePhotoBtn} onPress={() => setImage(null)}>
-              <Text style={styles.changePhotoText}>Trocar foto</Text>
+              <Text style={styles.changePhotoText}>{t("scanner.btn_change")}</Text>
             </TouchableOpacity>
           </>
         )}
 
         {loading && (
-          <Text style={styles.loadingHint}>Analisando o rótulo...</Text>
+          <Text style={styles.loadingHint}>{t("scanner.loading")}</Text>
         )}
 
         {result && (
@@ -156,7 +156,7 @@ export default function LabelScannerScreen({ navigation }) {
             <View style={styles.resultCard}>
               <View style={styles.resultHeader}>
                 <Ionicons name="document-text-outline" size={22} color={PRIMARY} />
-                <Text style={styles.resultTitle}>Informações do rótulo</Text>
+                <Text style={styles.resultTitle}>{t("scanner.label_info")}</Text>
               </View>
               <Text style={styles.resultText}>{result.extracted_info}</Text>
             </View>
@@ -165,7 +165,7 @@ export default function LabelScannerScreen({ navigation }) {
               <View style={[styles.resultCard, { marginTop: 12 }]}>
                 <View style={styles.resultHeader}>
                   <Ionicons name="restaurant-outline" size={22} color={PRIMARY} />
-                  <Text style={styles.resultTitle}>Equivalente no Portal do Churras</Text>
+                  <Text style={styles.resultTitle}>{t("scanner.equivalent")}</Text>
                 </View>
                 {result.suggestions.map((s) => (
                   <View key={s.product_id} style={styles.suggestionItem}>
@@ -181,7 +181,7 @@ export default function LabelScannerScreen({ navigation }) {
               style={styles.newBtn}
               onPress={() => { setImage(null); setResult(null); }}
             >
-              <Text style={styles.newBtnText}>Novo scan</Text>
+              <Text style={styles.newBtnText}>{t("scanner.btn_new")}</Text>
             </TouchableOpacity>
           </>
         )}

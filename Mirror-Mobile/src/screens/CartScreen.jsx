@@ -9,6 +9,7 @@ import {
   Alert,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import { useTranslation } from "react-i18next";
 import { useCart } from "../context/CartContext";
 import { formatPrice } from "../services/api";
 import { PRODUCT_IMAGES } from "../services/productImages";
@@ -19,6 +20,7 @@ const PLACEHOLDER_COLORS = [
 ];
 
 export default function CartScreen({ navigation }) {
+  const { t } = useTranslation();
   const {
     cart,
     removeFromCart,
@@ -36,11 +38,11 @@ export default function CartScreen({ navigation }) {
     if (cart.length === 0) return;
 
     Alert.alert(
-      "Limpar carrinho",
-      "Tem certeza que deseja limpar o carrinho?",
+      t("cart.clear_title"),
+      t("cart.clear_message"),
       [
-        { text: "Cancelar", style: "cancel" },
-        { text: "Limpar", style: "destructive", onPress: clearCart },
+        { text: t("common.cancel"), style: "cancel" },
+        { text: t("cart.clear"), style: "destructive", onPress: clearCart },
       ]
     );
   };
@@ -62,19 +64,17 @@ export default function CartScreen({ navigation }) {
           <TouchableOpacity onPress={() => navigation.navigate("HomeTab")}>
             <Text style={styles.backIcon}>←</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Carrinho</Text>
+          <Text style={styles.headerTitle}>{t("cart.title")}</Text>
         </View>
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyIcon}>🛒</Text>
-          <Text style={styles.emptyText}>Seu carrinho está vazio</Text>
-          <Text style={styles.emptyHint}>
-            Adicione produtos para continuar
-          </Text>
+          <Text style={styles.emptyText}>{t("cart.empty_title")}</Text>
+          <Text style={styles.emptyHint}>{t("cart.empty_hint")}</Text>
           <TouchableOpacity
             style={styles.browseButton}
-            onPress={() => navigation.navigate("Main")}
+            onPress={() => navigation.navigate("HomeTab")}
           >
-            <Text style={styles.browseButtonText}>Ver Produtos</Text>
+            <Text style={styles.browseButtonText}>{t("cart.browse")}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -90,9 +90,9 @@ export default function CartScreen({ navigation }) {
         <TouchableOpacity onPress={() => navigation.navigate("HomeTab")}>
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Carrinho ({cart.length})</Text>
+        <Text style={styles.headerTitle}>{t("cart.title_with_count", { count: cart.length })}</Text>
         <TouchableOpacity onPress={handleClearCart}>
-          <Text style={styles.clearButton}>Limpar</Text>
+          <Text style={styles.clearButton}>{t("cart.clear")}</Text>
         </TouchableOpacity>
       </View>
 
@@ -175,14 +175,14 @@ export default function CartScreen({ navigation }) {
       {/* Bottom Summary */}
       <View style={styles.summaryContainer}>
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Subtotal</Text>
+          <Text style={styles.summaryLabel}>{t("cart.subtotal")}</Text>
           <Text style={styles.summaryValue}>
             {formatPrice(getCartSubtotal())}
           </Text>
         </View>
 
         <View style={[styles.summaryRow, styles.totalRow]}>
-          <Text style={styles.totalLabel}>Total</Text>
+          <Text style={styles.totalLabel}>{t("cart.total")}</Text>
           <Text style={styles.totalValue}>{formatPrice(getCartTotal())}</Text>
         </View>
 
@@ -190,7 +190,7 @@ export default function CartScreen({ navigation }) {
           style={styles.checkoutButton}
           onPress={handleCheckout}
         >
-          <Text style={styles.checkoutButtonText}>Finalizar Pedido</Text>
+          <Text style={styles.checkoutButtonText}>{t("cart.checkout")}</Text>
         </TouchableOpacity>
       </View>
     </View>

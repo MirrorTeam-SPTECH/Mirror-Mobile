@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import { forgotPassword } from "../services/api";
 
 const BG = "#FAF5EC";
@@ -25,6 +26,7 @@ const SERIF = Platform.select({ ios: "Georgia", android: "serif", default: "Geor
 
 export default function ForgotPasswordScreen() {
   const navigation = useNavigation();
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -35,7 +37,7 @@ export default function ForgotPasswordScreen() {
 
   const handleSend = async () => {
     if (!email.trim() || emailInvalid) {
-      setError("Digite um e-mail válido.");
+      setError(t("forgot_password.error_invalid_email"));
       return;
     }
     setLoading(true);
@@ -44,7 +46,7 @@ export default function ForgotPasswordScreen() {
       await forgotPassword(email.trim());
       setSent(true);
     } catch (err) {
-      setError(err.message || "Erro ao enviar. Tente novamente.");
+      setError(err.message || t("forgot_password.error_send_failed"));
     } finally {
       setLoading(false);
     }
@@ -65,27 +67,25 @@ export default function ForgotPasswordScreen() {
         </TouchableOpacity>
 
         <View style={styles.header}>
-          <Text style={styles.title}>Esqueceu a senha?</Text>
+          <Text style={styles.title}>{t("forgot_password.title")}</Text>
           <Text style={styles.subtitle}>
             {sent
-              ? "Verifique sua caixa de entrada e spam."
-              : "Digite seu e-mail cadastrado e enviaremos um código de redefinição."}
+              ? t("forgot_password.subtitle_sent")
+              : t("forgot_password.subtitle_default")}
           </Text>
         </View>
 
         {sent ? (
           <View style={styles.successBox}>
             <Ionicons name="checkmark-circle-outline" size={48} color={PRIMARY} />
-            <Text style={styles.successTitle}>Código enviado!</Text>
-            <Text style={styles.successText}>
-              Se esse e-mail estiver cadastrado, você receberá o código em breve.
-            </Text>
+            <Text style={styles.successTitle}>{t("forgot_password.success_title")}</Text>
+            <Text style={styles.successText}>{t("forgot_password.success_text")}</Text>
             <TouchableOpacity
               style={styles.submitBtn}
               onPress={() => navigation.navigate("ResetPassword")}
               activeOpacity={0.85}
             >
-              <Text style={styles.submitBtnText}>Inserir código</Text>
+              <Text style={styles.submitBtnText}>{t("forgot_password.btn_enter_code")}</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -105,7 +105,7 @@ export default function ForgotPasswordScreen() {
               />
               <TextInput
                 style={styles.inputText}
-                placeholder="seu@email.com"
+                placeholder={t("login.placeholder_email")}
                 placeholderTextColor={PLACEHOLDER}
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -117,7 +117,7 @@ export default function ForgotPasswordScreen() {
               />
             </View>
             {emailInvalid && (
-              <Text style={styles.fieldError}>E-mail inválido</Text>
+              <Text style={styles.fieldError}>{t("forgot_password.field_email_invalid")}</Text>
             )}
 
             {error && (
@@ -136,7 +136,7 @@ export default function ForgotPasswordScreen() {
               {loading ? (
                 <ActivityIndicator color="#fff" size="small" />
               ) : (
-                <Text style={styles.submitBtnText}>Enviar código</Text>
+                <Text style={styles.submitBtnText}>{t("forgot_password.btn_send")}</Text>
               )}
             </TouchableOpacity>
 
@@ -144,7 +144,7 @@ export default function ForgotPasswordScreen() {
               style={styles.secondaryBtn}
               onPress={() => navigation.navigate("ResetPassword")}
             >
-              <Text style={styles.secondaryBtnText}>Já tenho um código</Text>
+              <Text style={styles.secondaryBtnText}>{t("forgot_password.btn_have_code")}</Text>
             </TouchableOpacity>
           </View>
         )}

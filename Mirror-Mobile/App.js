@@ -1,8 +1,10 @@
+import "./src/i18n";
 import React, { useState, useEffect } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { loadSavedLanguage } from "./src/i18n";
 import { AuthProvider } from "./src/context/AuthContext";
 import { FavoritesProvider } from "./src/context/FavoritesContext";
 import { ProductsProvider } from "./src/context/ProductsContext";
@@ -115,7 +117,8 @@ export default function App() {
   const [initialRoute, setInitialRoute] = useState(null);
 
   useEffect(() => {
-    const checkOnboarding = async () => {
+    const init = async () => {
+      await loadSavedLanguage();
       if (__DEV__) {
         await AsyncStorage.removeItem("hasSeenOnboarding");
       }
@@ -123,7 +126,7 @@ export default function App() {
       setInitialRoute(hasSeenOnboarding === "true" ? "Login" : "Onboarding");
     };
 
-    checkOnboarding();
+    init();
   }, []);
 
   if (initialRoute === null) {

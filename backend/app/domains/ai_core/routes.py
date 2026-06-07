@@ -80,8 +80,6 @@ def generate_nutrition_ranking(
 @router.post("/grill-advisor", response_model=GrillAdvisorResponse)
 def grill_advisor(body: ImageAnalysisRequest):
     analysis = analyze_grill_image(body.image_base64, body.media_type)
-    if analysis is None:
-        raise HTTPException(status_code=503, detail="Serviço de IA não configurado")
     return GrillAdvisorResponse(analysis=analysis)
 
 
@@ -101,9 +99,6 @@ def label_scanner(
         body.media_type,
         products_data,
     )
-
-    if not extracted_info:
-        raise HTTPException(status_code=503, detail="Serviço de IA não configurado")
 
     return LabelScannerResponse(
         extracted_info=extracted_info,

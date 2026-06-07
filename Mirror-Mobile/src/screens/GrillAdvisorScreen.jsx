@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
+import { useTranslation } from "react-i18next";
 import { analyzeGrillImage } from "../services/api";
 import WebCameraModal from "../components/WebCameraModal";
 
@@ -20,6 +21,7 @@ const PRIMARY = "#D91C1C";
 const BG = "#FAF5EC";
 
 export default function GrillAdvisorScreen({ navigation }) {
+  const { t } = useTranslation();
   const [image, setImage] = useState(null);
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -37,14 +39,14 @@ export default function GrillAdvisorScreen({ navigation }) {
     if (source === "camera") {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert("Permissão necessária", "Precisamos de acesso à câmera.");
+        Alert.alert(t("grill.perm_title"), t("grill.perm_camera"));
         return;
       }
       result = await ImagePicker.launchCameraAsync(options);
     } else {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert("Permissão necessária", "Precisamos de acesso à galeria.");
+        Alert.alert(t("grill.perm_title"), t("grill.perm_gallery"));
         return;
       }
       result = await ImagePicker.launchImageLibraryAsync({
@@ -74,7 +76,7 @@ export default function GrillAdvisorScreen({ navigation }) {
       const result = await analyzeGrillImage(image.base64, image.mimeType);
       setAnalysis(result.analysis);
     } catch (err) {
-      Alert.alert("Erro", err.message || "Não foi possível analisar a imagem.");
+      Alert.alert(t("grill.error_title"), err.message || t("grill.error_msg"));
     } finally {
       setLoading(false);
     }
@@ -92,13 +94,11 @@ export default function GrillAdvisorScreen({ navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color="#2A1E14" />
         </TouchableOpacity>
-        <Text style={styles.title}>Churrasqueiro de Bolso</Text>
+        <Text style={styles.title}>{t("grill.title")}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={styles.subtitle}>
-          Tire uma foto da sua carne e descubra o ponto e dicas do churrasqueiro
-        </Text>
+        <Text style={styles.subtitle}>{t("grill.subtitle")}</Text>
 
         {image ? (
           <View style={styles.imageArea}>
@@ -107,7 +107,7 @@ export default function GrillAdvisorScreen({ navigation }) {
         ) : (
           <View style={styles.imagePlaceholder}>
             <Ionicons name="camera" size={48} color="#B8A898" />
-            <Text style={styles.imagePlaceholderText}>Adicione uma foto da sua carne</Text>
+            <Text style={styles.imagePlaceholderText}>{t("grill.add_photo")}</Text>
           </View>
         )}
 
@@ -115,11 +115,11 @@ export default function GrillAdvisorScreen({ navigation }) {
           <View style={styles.pickRow}>
             <TouchableOpacity style={styles.pickBtn} onPress={() => pickImage("camera")} activeOpacity={0.8}>
               <Ionicons name="camera-outline" size={20} color={PRIMARY} />
-              <Text style={styles.pickBtnText}>Câmera</Text>
+              <Text style={styles.pickBtnText}>{t("grill.btn_camera")}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.pickBtn} onPress={() => pickImage("gallery")} activeOpacity={0.8}>
               <Ionicons name="images-outline" size={20} color={PRIMARY} />
-              <Text style={styles.pickBtnText}>Galeria</Text>
+              <Text style={styles.pickBtnText}>{t("grill.btn_gallery")}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -137,32 +137,32 @@ export default function GrillAdvisorScreen({ navigation }) {
               ) : (
                 <>
                   <Ionicons name="flame" size={20} color="#fff" style={{ marginRight: 8 }} />
-                  <Text style={styles.analyzeBtnText}>Analisar carne</Text>
+                  <Text style={styles.analyzeBtnText}>{t("grill.btn_analyze")}</Text>
                 </>
               )}
             </TouchableOpacity>
             <TouchableOpacity style={styles.changePhotoBtn} onPress={() => setImage(null)}>
-              <Text style={styles.changePhotoText}>Trocar foto</Text>
+              <Text style={styles.changePhotoText}>{t("grill.btn_change")}</Text>
             </TouchableOpacity>
           </>
         )}
 
         {loading && (
-          <Text style={styles.loadingHint}>Consultando o churrasqueiro...</Text>
+          <Text style={styles.loadingHint}>{t("grill.loading")}</Text>
         )}
 
         {analysis && (
           <View style={styles.resultCard}>
             <View style={styles.resultHeader}>
               <Ionicons name="checkmark-circle" size={22} color={PRIMARY} />
-              <Text style={styles.resultTitle}>Análise do churrasqueiro</Text>
+              <Text style={styles.resultTitle}>{t("grill.result_title")}</Text>
             </View>
             <Text style={styles.resultText}>{analysis}</Text>
             <TouchableOpacity
               style={styles.newBtn}
               onPress={() => { setImage(null); setAnalysis(null); }}
             >
-              <Text style={styles.newBtnText}>Nova análise</Text>
+              <Text style={styles.newBtnText}>{t("grill.btn_new")}</Text>
             </TouchableOpacity>
           </View>
         )}

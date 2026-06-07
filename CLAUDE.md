@@ -7,7 +7,7 @@ Projeto universitário, time pequeno, cliente real.
 
 ## Stack
 
-- **Mobile**: Expo 54 + React Native 0.81.5, React Navigation 7, AsyncStorage, expo-image-picker, **expo-location** (instalado via `npx expo install expo-location`)
+- **Mobile**: Expo 54 + React Native 0.81.5, React Navigation 7, AsyncStorage, expo-image-picker, **expo-location** (instalado via `npx expo install expo-location`), **i18next + react-i18next + expo-localization** (internacionalização PT-BR/EN)
 - **Backend**: FastAPI 0.109 + SQLAlchemy 2.0 + PostgreSQL 18 + Alembic (migration inicial aplicada)
 - **Data lake**: pipeline Medallion (Bronze → Silver → Gold) sobre PNAE/TACO, já rodando
 - **Auth**: JWT próprio com passlib/bcrypt — **funcionando** (register, login, me, persistência mobile)
@@ -149,7 +149,7 @@ Para cada `ORDER_ITEM`:
 
 ---
 
-## Estado atual (2026-05-05)
+## Estado atual (2026-06-07)
 
 ### Backend
 - [x] Estrutura modular por domínio: `orders/`, `users/`, `nutrition/`, `ai_core/`, `push/`
@@ -177,7 +177,7 @@ Para cada `ORDER_ITEM`:
 - [x] Navegação: Stack Navigator + Tab Navigator (5 tabs) corretamente aninhados
 - [x] Onboarding com flag `hasSeenOnboarding` no AsyncStorage
 - [x] HomeScreen, CartScreen, ProductDetailScreen, ProfileScreen, LoginScreen — completas
-- [x] CheckoutScreen integrada: cria pedido → `POST /pay` → `Linking.openURL()` para MP
+- [x] **CheckoutScreen**: cria pedido → `POST /pay` → detecta mock (`preference_id === "mock-paid"`) ou real; se mock, mostra overlay "Processando pagamento" (ActivityIndicator, 1,5 s) e navega para OrderTracking sem abrir URL externa; se real, `Linking.openURL()` para MP e navega em seguida
 - [x] OrderTrackingScreen: polling a cada 5s, exibe status + `pickup_code`, suporta todos os estados
 - [x] OrderHistoryScreen com modal de Nutrition Ranking (chama `/nutrition-ranking`)
 - [x] CartContext, ProductsContext, FavoritesContext (sincronizado com backend)
@@ -189,12 +189,14 @@ Para cada `ORDER_ITEM`:
 - [x] **ProfileScreen** redesenhada no sistema de design novo (cream/serif/Ionicons/cards com borda `LINE`); menu: Meus Pedidos (OrderHistory), Perto de Você (Nearby via Stack), Churrasqueiro de Bolso (GrillAdvisor), Scanner Comparativo (LabelScanner), logout
 - [x] **CartScreen**: botão `←` no header (volta para `HomeTab`); tab bar oculta via `options={{ tabBarStyle: { display: "none" } }}` para não cobrir o botão "Finalizar Pedido"; usa `PRODUCT_IMAGES[item.productId]` para imagem local; fallback: placeholder colorido por `productId % 8` com emoji 🍔
 - [x] **ProximityScreen**: geolocalização real via `expo-location`; distância calculada por Haversine (linha reta); raio de alerta: 300 m; food truck: Rua Domingos Giglio 81, Pirituba SP (-23.481362, -46.711614); exibe produto mais pedido (`/top-product`) quando perto; exibe endereço do food truck sempre; **acessível apenas como Stack screen** (via ProfileScreen "Perto de Você") — não está mais na tab bar; botão voltar via `useNavigation()`
-- [x] **LoyaltyScreen**: cartão de selos (10 bolinhas — vermelha com ✓ se preenchida, branca com número se vazia); banner dourado quando `cycles_completed > 0`; lista dos últimos 10 carimbos; regra visível ("só hambúrguer conta"); `getLoyalty()` em `api.js`; tab "Loyalty" com ícone `star-outline`; botão voltar via `useNavigation()`
+- [x] **LoyaltyScreen**: cartão de 10 selos (vermelho com ✓ preenchido / branco com número vazio); `useFocusEffect` refaz fetch toda vez que a tab ganha foco; **modal de recompensa** anima slide-up do fundo (spring) com overlay escuro, avatar com inicial do usuário, caixa de prêmio, grade com todos os 10 selos preenchidos, botões Compartilhar (`Share.share()`) e Baixar (web: PNG 700×420 retina via Canvas API; native: share sheet); banner dourado toca para reabrir o modal a qualquer momento; **lógica de exibição única por ciclo**: `AsyncStorage` key `@portal_churras:loyalty_shown_cycles` guarda o último `cycles_completed` já visto — modal só abre automaticamente quando `cycles_completed` cresceu; fechar e voltar à tela não reabre o modal até o usuário ganhar um ciclo novo; regra visível ("só hambúrguer conta"); tab "Loyalty" com ícone `star-outline`; botão voltar via `useNavigation()`
 - [x] **FavoritesScreen**: redesenhada no sistema de design novo (cream/serif/Ionicons, cards com borda `LINE`, imagem local via `PRODUCT_IMAGES`); botão voltar via `useNavigation()`; substituiu estilos legados `#f5f5f5`/`#333`
 - [x] **Tab bar**: 5 tabs — HomeTab, **Loyalty** (estrela), Orders (carrinho), Favorites (coração), ProfileTab
 - [x] **Botões de voltar**: padrão `useNavigation()` + `navigation.goBack()` em todas as telas secundárias (ProximityScreen, LoyaltyScreen, FavoritesScreen). **Não usar `canGoBack()` fora do `onPress`** — avaliado no momento do clique, não no render
 - [x] **Sistema de imagens locais**: `assets/images/` + `src/services/productImages.js` (mapeamento `id → require()`); X-Salada (id=1) com imagem `x-salada.jpeg`; `ProductCard`, `FavoritesScreen` e `CartScreen` usam imagem local quando disponível, placeholder colorido quando não; estilo de imagem usa dimensões explícitas em pixels (`position: absolute, top: 0, left: 0, width: "100%", height: <px>`) — **não usar `StyleSheet.absoluteFill` em `Image`**, causa esticamento
 - [x] `api.js` lê URL via `process.env.EXPO_PUBLIC_API_URL` com fallback `http://localhost:8000/api`
+- [x] **i18n completo**: `i18next` + `react-i18next` + `expo-localization`; arquivos em `src/i18n/locales/pt-BR.json` e `en.json` (~230 chaves cada); idioma detectado pelo dispositivo no boot; preferência salva em AsyncStorage (`@portal_churras:language`); troca em tempo real via botão no `ProfileScreen`; todas as telas traduzidas incluindo Dashboard, Analytics, ForgotPassword, ResetPassword; `CategoryFilter` mapeia nomes de categorias da API via `CATEGORY_KEY_MAP`; datas formatadas com `i18n.language` (sem hardcode `"pt-BR"`); nomes de produtos **não são traduzidos** (são nomes de marca)
+- [x] **CartScreen**: bug corrigido — botão "Ver Produtos" (carrinho vazio) navegava para `"Main"` (nome inexistente); corrigido para `"HomeTab"`
 - [ ] SearchBar ainda visual apenas (sem `onChangeText`/state)
 - [ ] Imagens de produtos: 12/13 produtos ainda sem imagem (apenas X-Salada tem)
 - [ ] Cache offline (AsyncStorage para menu/histórico) — não implementado
@@ -213,6 +215,7 @@ Para cada `ORDER_ITEM`:
 5. Imagens de produtos: adicionar fotos reais dos 12 produtos restantes em `assets/images/` e mapear em `productImages.js`
 6. Deletar `BottomNavBar.jsx` (código morto, substituído pelo Tab Navigator)
 7. Migrar estilos legados de `CartScreen.jsx` e `CheckoutScreen.jsx` para o sistema de design novo
+8. Ao adicionar novas features, incluir as strings em ambos `pt-BR.json` e `en.json` antes de usar no componente
 
 ### Prioridade 3 — Push Notifications
 7. Adicionar `expo-notifications` no `package.json`
@@ -238,12 +241,13 @@ Para cada `ORDER_ITEM`:
 - **Favoritos**: `FavoritesContext` — nunca estado local no card
 - **Navegação**: Tab Navigator (`@react-navigation/bottom-tabs`) aninhado em Stack. `BottomNavBar.jsx` é código morto (não usado), pode ser deletado
 - **Auth**: token JWT é persistido em AsyncStorage com chave `@portal_churras:token`. `AuthContext` faz `getMe()` ao abrir o app para restaurar sessão; em caso de erro (401), limpa o token. Qualquer resposta 401 em qualquer chamada dispara auto-logout via `setOnUnauthorized`. Sempre usar `useAuth()` em vez de manipular AsyncStorage diretamente
-- **API base URL**: vem de `process.env.EXPO_PUBLIC_API_URL` (definida no `.env` do mobile). Para device físico testando, use o IP da máquina (ex: `EXPO_PUBLIC_API_URL=http://192.168.0.10:8000/api`), não `localhost`
+- **API base URL**: vem de `process.env.EXPO_PUBLIC_API_URL` (definida no `.env` do mobile). Para device físico testando, use o IP da máquina (ex: `EXPO_PUBLIC_API_URL=http://192.168.0.10:8000/api`), não `localhost`. O uvicorn **deve ser iniciado com `--host 0.0.0.0`** para aceitar conexões da rede local — sem essa flag ele escuta apenas em `127.0.0.1` e o device recebe `ERR_CONNECTION_REFUSED`: `uvicorn app.main:app --reload --host 0.0.0.0`
 - **Imagens de produtos**: usar assets locais via `require()` em `src/services/productImages.js`. **O arquivo de imagem deve existir em `assets/images/` antes de adicionar o `require()` e iniciar o Metro** — caso contrário o bundler falha com 500. Nunca hotlink externo
 - **Estilo de imagem de produto**: usar dimensões explícitas em pixels, nunca `StyleSheet.absoluteFill` em componente `Image` — causa esticamento em alguns contextos RN. Padrão: `{ position: "absolute", top: 0, left: 0, width: "100%", height: <valor_px> }` com `resizeMode="cover"` e `overflow: "hidden"` no container pai
 - **Design system**: usar sempre os tokens do sistema de design novo (ver seção "Sistema de design"). Não criar novas telas com `backgroundColor: "#f5f5f5"` ou `color: "#333"` — usar `BG`, `INK`, `PRIMARY`, etc.
 - **Estilos legados**: `#C41E3A` (accent antigo) ainda aparece em CartScreen/CheckoutScreen — ao tocar nessas telas, migrar para o sistema novo
 - **Botão de voltar**: usar `useNavigation()` do `@react-navigation/native` em componentes auxiliares (ex: `TopBar`). Chamar `navigation.goBack()` dentro do `onPress` — nunca avaliar `canGoBack()` fora do handler, pois no render inicial pode retornar `false` mesmo com pilha válida
+- **i18n**: toda string visível ao usuário deve usar `const { t } = useTranslation()` e a chave correspondente em `src/i18n/locales/pt-BR.json` + `en.json`. Nunca colocar texto hardcoded em JSX. Objetos/arrays com strings traduzidas (ex: `MENU_ITEMS`, `SLIDES`) devem ser construídos **dentro** do componente (após o `useTranslation()`), nunca no nível de módulo. Interpolação: `t("chave", { variavel })`. Idioma detectado automaticamente; troca via `setLanguage(lang)` de `src/i18n/index.js`.
 
 ### Backend (FastAPI / Python)
 
@@ -314,6 +318,13 @@ Para cada `ORDER_ITEM`:
 - **2026-05-05** — FavoritesScreen redesenhada no sistema de design novo (cream/serif/cards com borda LINE, imagens locais via PRODUCT_IMAGES); eliminou últimos estilos legados da tela
 - **2026-05-05** — Botões de voltar: padrão consolidado em `useNavigation()` + `goBack()` dentro do `onPress`. Bug corrigido: `canGoBack()` avaliado no render retornava `false` antes da pilha estar montada — movido para dentro do handler resolve o problema
 - **2026-05-05** — Imagens no carrinho: `CartScreen` passou a usar `PRODUCT_IMAGES[item.productId]`; quando sem imagem, exibe placeholder colorido baseado em `productId % 8`. Corrigido esticamento em `ProductCard` e `FavoritesScreen`: trocado `StyleSheet.absoluteFill` por dimensões explícitas em px + `resizeMode="cover"` no `Image`
+- **2026-05-17** — Modal de recompensa na `LoyaltyScreen`: slide-up animado (spring) com overlay, avatar, grade de selos preenchidos, botões de compartilhar e download. Lógica de exibição controlada por `AsyncStorage` (`@portal_churras:loyalty_shown_cycles`): modal abre automaticamente só quando `cycles_completed` cresceu desde a última visita; banner dourado permanece visível para reabrir o modal manualmente a qualquer momento
+- **2026-05-17** — `LoyaltyScreen`: `useFocusEffect` substitui `useEffect` para refazer o fetch toda vez que a tab recebe foco (não apenas no mount)
+- **2026-05-17** — `CheckoutScreen`: detecção de mock payment via `preference_id === "mock-paid"`; quando mock, exibe overlay de "Processando pagamento" (1,5 s) em vez de abrir URL externa, garantindo fluxo de teste completo sem sair do app
+- **2026-05-21** — i18n implementado em todo o projeto mobile: `i18next` + `react-i18next` + `expo-localization`; ~150 chaves em PT-BR e EN; detecção automática do idioma do dispositivo; preferência persistida em AsyncStorage; troca em tempo real via botão no ProfileScreen; todas as 13 telas e componentes compartilhados traduzidos. Objetos com strings traduzidas (SLIDES do Onboarding, MENU_ITEMS do Profile) movidos para dentro dos componentes para respeitar as regras de hooks.
+- **2026-06-07** — i18n expandido: DashboardScreen, AnalyticsScreen, ForgotPasswordScreen e ResetPasswordScreen adicionados ao sistema (estavam sem `useTranslation`). `CategoryFilter` ganhou `CATEGORY_KEY_MAP` para traduzir nomes de categorias que vêm da API em PT-BR. Corrigido hardcode de locale `"pt-BR"` em `toLocaleDateString` em LoyaltyScreen e OrderHistoryScreen — agora usa `i18n.language`. Corrigido split de mensagem em `" e "` no canvas de download do voucher de fidelidade — substituído por chaves `modal_message_line1` e `modal_message_line2`. Total: ~230 chaves por idioma.
+- **2026-06-07** — CartScreen: bug no botão "Ver Produtos" (estado de carrinho vazio) corrigido — navegava para `"Main"` (nome de rota inexistente), corrigido para `"HomeTab"`.
+- **2026-06-07** — Backend com device físico: uvicorn deve ser iniciado com `--host 0.0.0.0` para escutar em todas as interfaces de rede; sem isso, só aceita conexões de `127.0.0.1` e devices na rede local recebem `ERR_CONNECTION_REFUSED`.
 
 ---
 
@@ -331,3 +342,8 @@ Para cada `ORDER_ITEM`:
 - **Rotas FastAPI**: sempre declarar rotas com path literal (ex: `/orders/top-product`, `/loyalty`) antes de rotas com path parameter (ex: `/orders/{order_id}`) no mesmo router
 - **Novo pacote Expo nativo** (ex: `expo-location`, `expo-notifications`): instalar com `npx expo install <pacote>` (não `npm install`). Após instalar, reiniciar Metro com `npx expo start --clear` para limpar cache
 - **`useNavigation()` vs prop drilling**: para componentes auxiliares dentro de telas (ex: `TopBar`, `TopBarHeader`), usar `useNavigation()` do `@react-navigation/native` em vez de receber `navigation` por prop — evita `undefined` quando o contexto não repassa a prop corretamente
+- **i18n — novas strings**: ao adicionar qualquer texto visível ao usuário, adicionar a chave em ambos `src/i18n/locales/pt-BR.json` e `src/i18n/locales/en.json` antes de usar no componente. Namespace flat dentro de `translation` (ex: `"proximity.btn_refresh"`). Arrays ou objetos com strings traduzidas não podem ser declarados no nível de módulo — apenas dentro do corpo do componente após `useTranslation()`.
+- **i18n — arrays traduzidos**: usar `t("key", { returnObjects: true })` para retornar arrays (ex: `DAYS_SHORT`, `DAYS_FULL`). Declarar dentro do componente, não no nível de módulo.
+- **i18n — datas**: nunca hardcodar `"pt-BR"` em `toLocaleDateString` — usar `i18n.language` (disponível via `const { t, i18n } = useTranslation()`).
+- **i18n — categorias da API**: os nomes de categorias chegam do backend em PT-BR. O mapeamento para chaves i18n fica em `CATEGORY_KEY_MAP` em `CategoryFilter.jsx`. Se adicionar nova categoria no seed, adicionar a entrada lá e nas duas traduções.
+- **i18n — nomes de produtos**: nomes de produtos (X-Churrasco, X-Salada etc.) são nomes de marca e **não devem ser traduzidos**.

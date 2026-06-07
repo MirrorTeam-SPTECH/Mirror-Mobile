@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View, TouchableOpacity, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { useCart } from "../context/CartContext";
 
 const INK = "#2A1E14";
@@ -9,16 +10,17 @@ const CREAM = "#FAF5EC";
 const SUBTLE = "#8A7558";
 
 export default function TopBar({ navigation }) {
+  const { t } = useTranslation();
   const { getCartItemCount } = useCart();
   const cartCount = getCartItemCount();
 
   return (
     <View style={styles.container}>
       <View>
-        <Text style={styles.label}>Portal do Churras</Text>
+        <Text style={styles.label}>{t("common.app_name")}</Text>
         <View style={styles.locationRow}>
           <Ionicons name="location-outline" size={14} color={PRIMARY} />
-          <Text style={styles.locationText}>Food Truck</Text>
+          <Text style={styles.locationText}>{t("common.food_truck")}</Text>
         </View>
       </View>
 

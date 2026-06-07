@@ -1,13 +1,28 @@
 import React from "react";
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from "react-native";
+import { useTranslation } from "react-i18next";
 import { useProducts } from "../context/ProductsContext";
 
 const PRIMARY = "#D91C1C";
 const INK = "#2A1E14";
 const LINE = "#E8DFD1";
 
+const CATEGORY_KEY_MAP = {
+  "Hambúrgueres": "hamburgeres",
+  "Bebidas": "bebidas",
+  "Acompanhamentos": "acompanhamentos",
+  "Sobremesas": "sobremesas",
+  "Combos": "combos",
+};
+
 export default function CategoryFilter() {
+  const { t } = useTranslation();
   const { categories, selectedCategory, setSelectedCategory } = useProducts();
+
+  const getCatLabel = (name) => {
+    const key = CATEGORY_KEY_MAP[name];
+    return key ? t(`category.${key}`) : name;
+  };
 
   return (
     <View style={styles.container}>
@@ -22,7 +37,7 @@ export default function CategoryFilter() {
           activeOpacity={0.8}
         >
           <Text style={[styles.pillText, selectedCategory === null && styles.pillTextActive]}>
-            Tudo
+            {t("category.all")}
           </Text>
         </TouchableOpacity>
 
@@ -34,7 +49,7 @@ export default function CategoryFilter() {
             activeOpacity={0.8}
           >
             <Text style={[styles.pillText, selectedCategory === cat.id && styles.pillTextActive]}>
-              {cat.name}
+              {getCatLabel(cat.name)}
             </Text>
           </TouchableOpacity>
         ))}

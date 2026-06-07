@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 
 const PRIMARY = "#D91C1C";
@@ -33,6 +34,7 @@ function FieldError({ text }) {
 }
 
 export default function LoginScreen({ navigation }) {
+  const { t } = useTranslation();
   const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -46,18 +48,18 @@ export default function LoginScreen({ navigation }) {
 
   const { login, register } = useAuth();
 
-  const touch = (field) => setTouched((t) => ({ ...t, [field]: true }));
+  const touch = (field) => setTouched((prev) => ({ ...prev, [field]: true }));
 
   const emailError = touched.email
     ? !email.trim()
-      ? "E-mail obrigatório"
+      ? t("login.email_required")
       : !/\S+@\S+\.\S+/.test(email)
-      ? "E-mail inválido"
+      ? t("login.email_invalid")
       : null
     : null;
-  const pwError = touched.password && !password.trim() ? "Senha obrigatória" : null;
+  const pwError = touched.password && !password.trim() ? t("login.password_required") : null;
   const nameError =
-    mode === "register" && touched.name && !name.trim() ? "Nome obrigatório" : null;
+    mode === "register" && touched.name && !name.trim() ? t("login.name_required") : null;
 
   const rowStyle = (field, hasError) => [
     styles.inputRow,
@@ -82,7 +84,7 @@ export default function LoginScreen({ navigation }) {
       }
       navigation.replace("Main");
     } catch (err) {
-      setError(err.message || "Tente novamente.");
+      setError(err.message || t("checkout.error_default"));
     } finally {
       setLoading(false);
     }
@@ -116,12 +118,10 @@ export default function LoginScreen({ navigation }) {
             resizeMode="contain"
           />
           <Text style={styles.headline}>
-            {mode === "login" ? "Bem-vindo de volta" : "Crie sua conta"}
+            {mode === "login" ? t("login.welcome_back") : t("login.create_account")}
           </Text>
           <Text style={styles.subtitle}>
-            {mode === "login"
-              ? "Entre para continuar seu pedido"
-              : "Preencha os dados abaixo"}
+            {mode === "login" ? t("login.subtitle_login") : t("login.subtitle_register")}
           </Text>
         </View>
 
@@ -139,7 +139,7 @@ export default function LoginScreen({ navigation }) {
                 />
                 <TextInput
                   style={styles.inputText}
-                  placeholder="Seu nome completo"
+                  placeholder={t("login.placeholder_name")}
                   placeholderTextColor={PLACEHOLDER}
                   autoCapitalize="words"
                   value={name}
@@ -167,7 +167,7 @@ export default function LoginScreen({ navigation }) {
                 />
                 <TextInput
                   style={styles.inputText}
-                  placeholder="(00) 00000-0000"
+                  placeholder={t("login.placeholder_phone")}
                   placeholderTextColor={PLACEHOLDER}
                   keyboardType="phone-pad"
                   value={phone}
@@ -190,7 +190,7 @@ export default function LoginScreen({ navigation }) {
               />
               <TextInput
                 style={styles.inputText}
-                placeholder="seu@email.com"
+                placeholder={t("login.placeholder_email")}
                 placeholderTextColor={PLACEHOLDER}
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -218,7 +218,7 @@ export default function LoginScreen({ navigation }) {
               />
               <TextInput
                 style={[styles.inputText, { flex: 1 }]}
-                placeholder="Sua senha"
+                placeholder={t("login.placeholder_password")}
                 placeholderTextColor={PLACEHOLDER}
                 secureTextEntry={!showPw}
                 value={password}
@@ -247,7 +247,7 @@ export default function LoginScreen({ navigation }) {
                 style={styles.forgotRow}
                 onPress={() => navigation.navigate("ForgotPassword")}
               >
-                <Text style={styles.forgot}>Esqueci a senha</Text>
+                <Text style={styles.forgot}>{t("login.forgot_password")}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -271,7 +271,7 @@ export default function LoginScreen({ navigation }) {
               <ActivityIndicator color="#fff" size="small" />
             ) : (
               <Text style={styles.submitBtnText}>
-                {mode === "login" ? "Entrar" : "Cadastrar"}
+                {mode === "login" ? t("login.btn_login") : t("login.btn_register")}
               </Text>
             )}
           </TouchableOpacity>
@@ -283,7 +283,7 @@ export default function LoginScreen({ navigation }) {
               onPress={() => navigation.replace("Main")}
               activeOpacity={0.7}
             >
-              <Text style={styles.guestBtnText}>Continuar sem login</Text>
+              <Text style={styles.guestBtnText}>{t("login.continue_guest")}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -291,11 +291,11 @@ export default function LoginScreen({ navigation }) {
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            {mode === "login" ? "Novo por aqui? " : "Já tem uma conta? "}
+            {mode === "login" ? t("login.no_account") : t("login.has_account")}
           </Text>
           <TouchableOpacity onPress={toggleMode}>
             <Text style={styles.footerLink}>
-              {mode === "login" ? "Crie sua conta" : "Fazer login"}
+              {mode === "login" ? t("login.link_register") : t("login.link_login")}
             </Text>
           </TouchableOpacity>
         </View>

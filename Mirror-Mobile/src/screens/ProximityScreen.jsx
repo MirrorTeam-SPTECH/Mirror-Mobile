@@ -13,6 +13,7 @@ import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import { getTopProduct } from "../services/api";
 
@@ -49,6 +50,7 @@ function formatDistance(meters) {
 }
 
 function TopBarHeader() {
+  const { t } = useTranslation();
   const nav = useNavigation();
   return (
     <View style={styles.topBar}>
@@ -60,14 +62,15 @@ function TopBarHeader() {
         <Ionicons name="chevron-back" size={26} color={INK} />
       </TouchableOpacity>
       <View style={styles.topBarText}>
-        <Text style={styles.topLabel}>Portal do Churras</Text>
-        <Text style={styles.topTitle}>Perto de você</Text>
+        <Text style={styles.topLabel}>{t("common.app_name")}</Text>
+        <Text style={styles.topTitle}>{t("proximity.title")}</Text>
       </View>
     </View>
   );
 }
 
 export default function ProximityScreen({ navigation }) {
+  const { t } = useTranslation();
   const { isLoggedIn } = useAuth();
   const [status, setStatus]       = useState("idle");
   const [distance, setDistance]   = useState(null);
@@ -119,7 +122,7 @@ export default function ProximityScreen({ navigation }) {
         <TopBarHeader />
         <View style={styles.center}>
           <ActivityIndicator size="large" color={PRIMARY} />
-          <Text style={styles.loadingText}>Obtendo localização...</Text>
+          <Text style={styles.loadingText}>{t("proximity.loading")}</Text>
         </View>
       </SafeAreaView>
     );
@@ -132,10 +135,8 @@ export default function ProximityScreen({ navigation }) {
         <TopBarHeader />
         <View style={styles.center}>
           <Ionicons name="location-off-outline" size={56} color={SUBTLE} />
-          <Text style={styles.stateTitle}>Localização bloqueada</Text>
-          <Text style={styles.stateDesc}>
-            Permita o acesso à localização nas configurações do dispositivo para usar esta função.
-          </Text>
+          <Text style={styles.stateTitle}>{t("proximity.denied_title")}</Text>
+          <Text style={styles.stateDesc}>{t("proximity.denied_desc")}</Text>
         </View>
       </SafeAreaView>
     );
@@ -148,9 +149,9 @@ export default function ProximityScreen({ navigation }) {
         <TopBarHeader />
         <View style={styles.center}>
           <Ionicons name="alert-circle-outline" size={56} color={SUBTLE} />
-          <Text style={styles.stateTitle}>Não foi possível obter a localização</Text>
+          <Text style={styles.stateTitle}>{t("proximity.error_title")}</Text>
           <TouchableOpacity style={styles.retryBtn} onPress={check} activeOpacity={0.85}>
-            <Text style={styles.retryText}>Tentar novamente</Text>
+            <Text style={styles.retryText}>{t("proximity.btn_retry")}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -177,19 +178,19 @@ export default function ProximityScreen({ navigation }) {
             />
           </View>
           <Text style={[styles.statusLabel, { color: isNearby ? GREEN : MUTED }]}>
-            {isNearby ? "Você está perto!" : "Você está longe"}
+            {isNearby ? t("proximity.nearby") : t("proximity.far")}
           </Text>
           <Text style={styles.distanceText}>
             {isNearby
-              ? `a ${formatDistance(distance)} do Portal do Churras`
-              : `Portal do Churras está a ${formatDistance(distance)} de você`}
+              ? t("proximity.distance_nearby", { distance: formatDistance(distance) })
+              : t("proximity.distance_far", { distance: formatDistance(distance) })}
           </Text>
         </View>
 
         {/* Sugestão do lanche favorito — só quando perto e com histórico */}
         {isNearby && topProduct && (
           <>
-            <Text style={styles.sectionTitle}>Seu lanche de sempre</Text>
+            <Text style={styles.sectionTitle}>{t("proximity.usual_title")}</Text>
             <View style={styles.suggestionCard}>
               <View style={styles.suggestionIconWrap}>
                 <Ionicons name="flame-outline" size={22} color={PRIMARY} />
@@ -197,7 +198,7 @@ export default function ProximityScreen({ navigation }) {
               <View style={styles.suggestionBody}>
                 <Text style={styles.suggestionName}>{topProduct.name}</Text>
                 <Text style={styles.suggestionHint}>
-                  Você já pediu {topProduct.total_quantity}× — que tal de novo?
+                  {t("proximity.usual_hint", { count: topProduct.total_quantity })}
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={16} color={SUBTLE} />
@@ -208,12 +209,10 @@ export default function ProximityScreen({ navigation }) {
         {/* Quando perto mas sem histórico */}
         {isNearby && !topProduct && isLoggedIn && (
           <>
-            <Text style={styles.sectionTitle}>Primeira vez por aqui?</Text>
+            <Text style={styles.sectionTitle}>{t("proximity.first_time")}</Text>
             <View style={styles.infoCard}>
               <Ionicons name="storefront-outline" size={20} color={PRIMARY} style={{ marginBottom: 8 }} />
-              <Text style={styles.infoText}>
-                Você está perto! Faça seu primeiro pedido e da próxima vez sugerimos o seu favorito.
-              </Text>
+              <Text style={styles.infoText}>{t("proximity.first_text")}</Text>
             </View>
           </>
         )}
@@ -221,32 +220,30 @@ export default function ProximityScreen({ navigation }) {
         {/* Incentivo quando longe */}
         {!isNearby && (
           <>
-            <Text style={styles.sectionTitle}>Venha nos visitar</Text>
+            <Text style={styles.sectionTitle}>{t("proximity.come_visit")}</Text>
             <View style={styles.infoCard}>
               <Ionicons name="storefront-outline" size={20} color={PRIMARY} style={{ marginBottom: 8 }} />
-              <Text style={styles.infoText}>
-                Quando você estiver a menos de {NEARBY_RADIUS_M} m do Portal do Churras, avisamos e mostramos o seu lanche favorito automaticamente.
-              </Text>
+              <Text style={styles.infoText}>{t("proximity.come_text")}</Text>
             </View>
           </>
         )}
 
         {/* Endereço do food truck */}
-        <Text style={styles.sectionTitle}>Onde estamos</Text>
+        <Text style={styles.sectionTitle}>{t("proximity.where_title")}</Text>
         <View style={styles.addressCard}>
           <View style={styles.addressIconWrap}>
             <Ionicons name="location" size={18} color={PRIMARY} />
           </View>
           <View style={styles.addressBody}>
             <Text style={styles.addressText}>{FOOD_TRUCK_ADDRESS}</Text>
-            <Text style={styles.addressHint}>Procure o food truck na rua!</Text>
+            <Text style={styles.addressHint}>{t("proximity.address_hint")}</Text>
           </View>
         </View>
 
         {/* Botão de atualizar */}
         <TouchableOpacity style={styles.refreshBtn} onPress={check} activeOpacity={0.8}>
           <Ionicons name="refresh-outline" size={16} color={PRIMARY} />
-          <Text style={styles.refreshText}>Atualizar localização</Text>
+          <Text style={styles.refreshText}>{t("proximity.btn_refresh")}</Text>
         </TouchableOpacity>
 
       </ScrollView>

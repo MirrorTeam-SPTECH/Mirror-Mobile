@@ -1,12 +1,14 @@
 import React from "react";
 import { StyleSheet, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 
 const LINE = "#E8DFD1";
 const INK = "#2A1E14";
 const MUTED = "#7A6A56";
 
 export default function SearchBar({ query = "", onChangeQuery }) {
+  const { t } = useTranslation();
   return (
     <View style={styles.container}>
       <View style={styles.bar}>
@@ -15,7 +17,7 @@ export default function SearchBar({ query = "", onChangeQuery }) {
           style={styles.input}
           value={query}
           onChangeText={onChangeQuery}
-          placeholder="Buscar picanha, costela, linguiça..."
+          placeholder={t("search.placeholder")}
           placeholderTextColor={MUTED}
           returnKeyType="search"
           // @ts-ignore — web only

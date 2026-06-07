@@ -12,6 +12,7 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import { formatPrice, getLoyalty, getOrders, getTopProduct } from "../services/api";
 
 // ─── Tokens ───────────────────────────────────────────────────────────────────
@@ -24,8 +25,6 @@ const MUTED   = "#7A6A56";
 const GOLD    = "#FFD66B";
 const SERIF   = Platform.select({ ios: "Georgia", android: "serif", default: "Georgia" });
 
-const DAYS_SHORT = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
-const TIME_SLOTS = ["Manhã\n6h–11h", "Tarde\n12h–17h", "Noite\n18h–23h", "Madrugada\n0h–5h"];
 const TIME_ICONS = ["sunny-outline", "partly-sunny-outline", "moon-outline", "star-outline"];
 
 // ─── KPI Card ─────────────────────────────────────────────────────────────────
@@ -51,6 +50,14 @@ function SectionHeader({ title }) {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function AnalyticsScreen() {
   const navigation = useNavigation();
+  const { t } = useTranslation();
+  const DAYS_SHORT = t("analytics.days_short", { returnObjects: true });
+  const TIME_SLOTS = [
+    t("analytics.time_morning"),
+    t("analytics.time_afternoon"),
+    t("analytics.time_evening"),
+    t("analytics.time_night"),
+  ];
   const [loading, setLoading]       = useState(true);
   const [orders, setOrders]         = useState([]);
   const [topProduct, setTopProduct] = useState(null);
@@ -144,8 +151,8 @@ export default function AnalyticsScreen() {
           <Ionicons name="arrow-back" size={22} color={INK} />
         </TouchableOpacity>
         <View>
-          <Text style={s.topLabel}>Portal do Churras</Text>
-          <Text style={s.topTitle}>Análises</Text>
+          <Text style={s.topLabel}>{t("common.app_name")}</Text>
+          <Text style={s.topTitle}>{t("analytics.title")}</Text>
         </View>
         <View style={{ width: 38 }} />
       </View>
@@ -153,58 +160,57 @@ export default function AnalyticsScreen() {
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
 
         {/* ── KPI row 1 (3 cards) ─────────────────────────────────────────── */}
-        <SectionHeader title="RESUMO" />
+        <SectionHeader title={t("analytics.section_summary")} />
         <View style={s.kpiRow}>
           <KpiCard
             icon="receipt-outline"
-            label="Total de pedidos"
+            label={t("analytics.kpi_orders")}
             value={String(paidOrders.length)}
             accent
           />
           <KpiCard
             icon="cash-outline"
-            label="Total gasto"
+            label={t("analytics.kpi_spent")}
             value={formatPrice(totalSpent)}
             valueStyle={{ fontSize: 15 }}
           />
           <KpiCard
             icon="checkmark-circle-outline"
-            label="Entregues"
+            label={t("analytics.kpi_delivered")}
             value={String(delivered)}
           />
         </View>
 
-        {/* ── KPI row 2 (2 cards) ─────────────────────────────────────────── */}
         <View style={[s.kpiRow, { marginTop: 0 }]}>
           <KpiCard
             icon="trending-up-outline"
-            label="Ticket médio"
+            label={t("analytics.kpi_avg_ticket")}
             value={avgTicket > 0 ? formatPrice(avgTicket) : "—"}
             valueStyle={{ fontSize: 15 }}
             flex={1}
           />
           <KpiCard
             icon="star-outline"
-            label="Fidelidade"
-            value={loyalty ? `${loyalty.stamps_in_cycle}/10 selos` : "—"}
+            label={t("analytics.kpi_loyalty")}
+            value={loyalty ? t("analytics.kpi_loyalty_value", { stamps: loyalty.stamps_in_cycle }) : "—"}
             flex={1}
           />
           <KpiCard
             icon="trophy-outline"
-            label="Ranking"
-            value={`#${rankPos} da casa`}
+            label={t("analytics.kpi_ranking")}
+            value={t("analytics.kpi_ranking_value", { pos: rankPos })}
             flex={1}
           />
         </View>
 
         {/* ── Gráfico de barras — Pedidos por dia da semana ───────────────── */}
-        <SectionHeader title="PEDIDOS POR DIA DA SEMANA" />
+        <SectionHeader title={t("analytics.section_weekday")} />
         <View style={s.card}>
           <View style={s.chartLegendRow}>
             <View style={s.chartLegendDot} />
-            <Text style={s.chartLegendText}>Nº de pedidos por dia</Text>
+            <Text style={s.chartLegendText}>{t("analytics.chart_legend_orders")}</Text>
             <Text style={s.chartPeakBadge}>
-              Pico: {DAYS_SHORT[peakDayI]} ({dayCounts[peakDayI]})
+              {t("analytics.chart_peak", { day: DAYS_SHORT[peakDayI], count: dayCounts[peakDayI] })}
             </Text>
           </View>
 
@@ -235,10 +241,10 @@ export default function AnalyticsScreen() {
         </View>
 
         {/* ── Gráfico horizontal — Top lanches ────────────────────────────── */}
-        <SectionHeader title="TOP LANCHES" />
+        <SectionHeader title={t("analytics.section_top_burgers")} />
         <View style={s.card}>
           {topItems.length === 0 ? (
-            <Text style={[s.emptyText]}>Nenhum item encontrado nos pedidos.</Text>
+            <Text style={[s.emptyText]}>{t("analytics.no_items")}</Text>
           ) : (
             topItems.map((item, i) => (
               <View key={i} style={s.hBarRow}>
@@ -264,11 +270,11 @@ export default function AnalyticsScreen() {
         </View>
 
         {/* ── Gráfico horizontal — Horário preferido ──────────────────────── */}
-        <SectionHeader title="HORÁRIO PREFERIDO" />
+        <SectionHeader title={t("analytics.section_time")} />
         <View style={s.card}>
           <View style={s.chartLegendRow}>
             <View style={s.chartLegendDot} />
-            <Text style={s.chartLegendText}>Distribuição de pedidos por período</Text>
+            <Text style={s.chartLegendText}>{t("analytics.chart_legend_time")}</Text>
           </View>
           {timeCounts.map((count, i) => {
             const isPeak = i === peakSlot;
@@ -303,7 +309,7 @@ export default function AnalyticsScreen() {
                 </View>
                 {isPeak && (
                   <View style={s.peakTag}>
-                    <Text style={s.peakTagText}>Pico</Text>
+                    <Text style={s.peakTagText}>{t("analytics.peak_tag")}</Text>
                   </View>
                 )}
               </View>
@@ -312,13 +318,13 @@ export default function AnalyticsScreen() {
         </View>
 
         {/* ── Card — Lanche favorito ──────────────────────────────────────── */}
-        <SectionHeader title="SEU FAVORITO" />
+        <SectionHeader title={t("analytics.section_favorite")} />
         <View style={[s.card, s.favCard]}>
           <Text style={{ fontSize: 40 }}>🍔</Text>
           <View style={{ flex: 1 }}>
             <Text style={s.favName} numberOfLines={2}>{topName}</Text>
             {topItems[0] && (
-              <Text style={s.favSub}>Pedido {topItems[0].count}× — seu lanche de sempre</Text>
+              <Text style={s.favSub}>{t("analytics.favorite_sub", { count: topItems[0].count })}</Text>
             )}
           </View>
         </View>
@@ -326,7 +332,7 @@ export default function AnalyticsScreen() {
         {/* ── Fidelidade ──────────────────────────────────────────────────── */}
         {loyalty && (
           <>
-            <SectionHeader title="FIDELIDADE" />
+            <SectionHeader title={t("analytics.section_loyalty")} />
             <View style={s.card}>
               <View style={s.stampsRow}>
                 {Array.from({ length: 10 }).map((_, i) => {
@@ -339,11 +345,14 @@ export default function AnalyticsScreen() {
                 })}
               </View>
               <Text style={s.loyaltySub}>
-                {loyalty.stamps_in_cycle}/10 selos no ciclo atual ·{" "}
+                {`${loyalty.stamps_in_cycle}/10 `}
+                {t("analytics.stamps_label")}
+                {" · "}
                 <Text style={{ fontWeight: "700", color: INK }}>
-                  {loyalty.cycles_completed} combo{loyalty.cycles_completed !== 1 ? "s" : ""}
-                </Text>{" "}
-                conquistado{loyalty.cycles_completed !== 1 ? "s" : ""}
+                  {t("analytics.combo_count", { count: loyalty.cycles_completed })}
+                </Text>
+                {" "}
+                {t("analytics.earned", { count: loyalty.cycles_completed })}
               </Text>
             </View>
           </>

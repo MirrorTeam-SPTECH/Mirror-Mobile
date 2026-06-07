@@ -16,6 +16,7 @@ import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import Svg, { Circle, G, Path, Text as SvgText } from "react-native-svg";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import { formatPrice, getLoyalty, getOrders, getTopProduct } from "../services/api";
 
@@ -29,12 +30,10 @@ const MUTED   = "#7A6A56";
 const GOLD    = "#FFD66B";
 const SERIF   = Platform.select({ ios: "Georgia", android: "serif", default: "Georgia" });
 
-const SLIDES     = ["cover", "top", "weekday", "hour", "ranking", "personality", "share"];
-const DAYS_SHORT = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
-const DAYS_FULL  = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"];
+const SLIDES = ["cover", "top", "weekday", "hour", "ranking", "personality", "share"];
 
 // ─── Donut SVG ────────────────────────────────────────────────────────────────
-function DonutClock({ peakStart = 18, peakEnd = 22, peakHour = 20, size = 200 }) {
+function DonutClock({ peakStart = 18, peakEnd = 22, peakHour = 20, size = 200, label = "PEAK HOUR" }) {
   const total  = 24;
   const R      = size * 0.37;
   const r      = size * 0.24;
@@ -78,7 +77,7 @@ function DonutClock({ peakStart = 18, peakEnd = 22, peakHour = 20, size = 200 })
           fill={MUTED}
           letterSpacing={1.2}
         >
-          HORA PEAK
+          {label}
         </SvgText>
       </G>
     </Svg>
@@ -88,7 +87,10 @@ function DonutClock({ peakStart = 18, peakEnd = 22, peakHour = 20, size = 200 })
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function DashboardScreen() {
   const navigation          = useNavigation();
+  const { t }               = useTranslation();
   const { user }            = useAuth();
+  const DAYS_SHORT = t("dashboard.days_short", { returnObjects: true });
+  const DAYS_FULL  = t("dashboard.days_full", { returnObjects: true });
   const { width: W }        = useWindowDimensions();
   const scrollRef           = useRef(null);
   const [slide, setSlide]   = useState(0);
@@ -170,11 +172,11 @@ export default function DashboardScreen() {
   const handleShare = async () => {
     try {
       await Share.share({
-        message:
-          `🍔 Minha retrospectiva 2026 no Portal do Churras\n` +
-          `📦 ${paidOrders.length} pedidos realizados\n` +
-          `💸 ${formatPrice(totalSpent)} investidos em sabor\n` +
-          (topName !== "—" ? `⭐ Favorito: ${topName}` : ""),
+        message: t("dashboard.share_message", {
+          orders: paidOrders.length,
+          spent: formatPrice(totalSpent),
+          top: topName !== "—" ? topName : "",
+        }),
       });
     } catch (_) {}
   };
@@ -210,24 +212,21 @@ export default function DashboardScreen() {
         ))}
         <View style={s.slidePad}>
           <View>
-            <Text style={s.eyebrow}>Sua retrospectiva</Text>
+            <Text style={s.eyebrow}>{t("dashboard.cover_eyebrow")}</Text>
             <Text style={[s.coverTitle, { fontStyle: "italic" }]}>
-              2026,{"\n"}
-              <Text style={{ color: GOLD }}>na chapa</Text>.
+              {t("dashboard.cover_title_year")}{"\n"}
+              <Text style={{ color: GOLD }}>{t("dashboard.cover_title_accent")}</Text>.
             </Text>
           </View>
           <View style={{ flex: 1 }} />
           <View>
-            <Text style={[s.eyebrow, { marginBottom: 4 }]}>VOCÊ FEZ</Text>
+            <Text style={[s.eyebrow, { marginBottom: 4 }]}>{t("dashboard.cover_orders_label")}</Text>
             <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 10 }}>
               <Text style={s.bigNumber}>{paidOrders.length}</Text>
-              <Text style={[s.coverSubNum, { paddingBottom: 12 }]}>pedidos</Text>
+              <Text style={[s.coverSubNum, { paddingBottom: 12 }]}>{t("dashboard.cover_orders_unit")}</Text>
             </View>
             <Text style={s.coverDesc}>
-              Investiu{" "}
-              <Text style={{ fontWeight: "700" }}>{formatPrice(totalSpent)}</Text>
-              {" "}em momentos bons.{"\n"}
-              Arrasta pra ver os detalhes →
+              {t("dashboard.cover_desc", { amount: formatPrice(totalSpent) })}
             </Text>
           </View>
         </View>
@@ -239,14 +238,14 @@ export default function DashboardScreen() {
     return (
       <View style={[s.slide, { width: W, backgroundColor: BG }]}>
         <View style={s.slidePad}>
-          <Text style={[s.eyebrow, { color: SUBTLE }]}>TOP DA CASA</Text>
+          <Text style={[s.eyebrow, { color: SUBTLE }]}>{t("dashboard.top_eyebrow")}</Text>
           <Text style={[s.slideTitle, { color: INK }]}>
-            Você e o{" "}
+            {t("dashboard.top_title_before")}{" "}
             <Text style={{ fontStyle: "italic", color: PRIMARY }}>{topName}</Text>
-            {"\n"}têm história.
+            {"\n"}{t("dashboard.top_title_after")}
           </Text>
           <Text style={[s.slideDesc, { color: MUTED }]}>
-            Pediu <Text style={{ fontWeight: "700", color: INK }}>{topCount} vezes</Text> esse ano.
+            {t("dashboard.top_desc", { count: topCount })}
           </Text>
 
           <View style={s.barList}>
@@ -283,14 +282,13 @@ export default function DashboardScreen() {
     return (
       <View style={[s.slide, { width: W, backgroundColor: BG }]}>
         <View style={s.slidePad}>
-          <Text style={[s.eyebrow, { color: SUBTLE }]}>SEU RITUAL</Text>
+          <Text style={[s.eyebrow, { color: SUBTLE }]}>{t("dashboard.weekday_eyebrow")}</Text>
           <Text style={[s.slideTitle, { color: INK }]}>
             <Text style={{ fontStyle: "italic", color: PRIMARY }}>{DAYS_FULL[peakDayI]}</Text>
-            {"\n"}é seu dia.
+            {"\n"}{t("dashboard.weekday_title_after")}
           </Text>
           <Text style={[s.slideDesc, { color: MUTED }]}>
-            {dayCounts[peakDayI]} pedidos só na {DAYS_FULL[peakDayI].toLowerCase()} — você tem fama
-            de mestre do final de semana.
+            {t("dashboard.weekday_desc", { count: dayCounts[peakDayI], day: DAYS_FULL[peakDayI] })}
           </Text>
 
           <View style={{ flex: 1 }} />
@@ -328,23 +326,39 @@ export default function DashboardScreen() {
   }
 
   function SlideHour() {
-    const slotName = ["Manhã (6h–11h)", "Tarde (12h–17h)", "Noite (18h–22h)", "Madrugada (0h–5h)"];
+    const slotNames = [
+      t("dashboard.slot_morning"),
+      t("dashboard.slot_afternoon"),
+      t("dashboard.slot_evening"),
+      t("dashboard.slot_night"),
+    ];
+    const slotLabel = peakSlot === 2
+      ? t("dashboard.hour_night_owl")
+      : peakSlot === 0
+      ? t("dashboard.hour_morning")
+      : t("dashboard.hour_afternoon");
     return (
       <View style={[s.slide, { width: W, backgroundColor: BG }]}>
         <View style={s.slidePad}>
-          <Text style={[s.eyebrow, { color: SUBTLE }]}>HORA PREFERIDA</Text>
+          <Text style={[s.eyebrow, { color: SUBTLE }]}>{t("dashboard.hour_eyebrow")}</Text>
           <Text style={[s.slideTitle, { color: INK }]}>
             <Text style={{ fontStyle: "italic", color: PRIMARY }}>{peakHour}h</Text>
-            {" "}é hora{"\n"}da fome.
+            {" "}{t("dashboard.hour_title_after")}
           </Text>
           <Text style={[s.slideDesc, { color: MUTED }]}>
-            Quase todo pedido sai entre {peakStart}h e {peakEnd}h. Você é {peakSlot === 2 ? "noturno raiz" : peakSlot === 0 ? "madrugador" : "de tarde"}.
+            {t("dashboard.hour_desc", { start: peakStart, end: peakEnd, slot: slotLabel })}
           </Text>
 
           <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-            <DonutClock peakStart={peakStart} peakEnd={peakEnd} peakHour={peakHour} size={Math.min(W - 80, 220)} />
+            <DonutClock
+              peakStart={peakStart}
+              peakEnd={peakEnd}
+              peakHour={peakHour}
+              size={Math.min(W - 80, 220)}
+              label={t("dashboard.peak_hour_label")}
+            />
             <Text style={[s.slideDesc, { color: MUTED, textAlign: "center", marginTop: 10 }]}>
-              {slotName[peakSlot]}
+              {slotNames[peakSlot]}
             </Text>
           </View>
         </View>
@@ -364,7 +378,7 @@ export default function DashboardScreen() {
       { name: "Diego F.",   orders: 15 },
       { name: "Isabela N.", orders: 11 },
     ];
-    const ranked = [...MOCK, { name: "Você", orders: paidOrders.length, isUser: true }]
+    const ranked = [...MOCK, { name: t("dashboard.ranking_you"), orders: paidOrders.length, isUser: true }]
       .sort((a, b) => b.orders - a.orders)
       .map((u, i) => ({ ...u, position: i + 1 }));
 
@@ -384,24 +398,24 @@ export default function DashboardScreen() {
       <View style={[s.slide, { width: W }]}>
         <View style={[StyleSheet.absoluteFill, { backgroundColor: "#2A1E14" }]} />
         <View style={s.slidePad}>
-          <Text style={[s.eyebrow, { color: GOLD }]}>RANKING DA CASA</Text>
+          <Text style={[s.eyebrow, { color: GOLD }]}>{t("dashboard.ranking_eyebrow")}</Text>
 
           {inTop3 ? (
             <Text style={[s.slideTitle, { color: BG }]}>
-              Você está{"\n"}
-              <Text style={{ color: GOLD, fontStyle: "italic" }}>no pódio! 🏆</Text>
+              {t("dashboard.ranking_top3_line1")}{"\n"}
+              <Text style={{ color: GOLD, fontStyle: "italic" }}>{t("dashboard.ranking_top3_line2")}</Text>
             </Text>
           ) : (
             <Text style={[s.slideTitle, { color: BG }]}>
-              Você é o{"\n"}
+              {t("dashboard.ranking_line1")}{"\n"}
               <Text style={{ color: GOLD, fontStyle: "italic" }}>#{userPos} da casa.</Text>
             </Text>
           )}
 
           <Text style={[s.slideDesc, { color: "rgba(250,245,236,0.65)" }]}>
             {inTop3
-              ? `Com ${paidOrders.length} pedidos, você chegou ao top 3!`
-              : `Entre ${total} clientes frequentes. Cada pedido te sobe no ranking.`}
+              ? t("dashboard.ranking_desc_top3", { count: paidOrders.length })
+              : t("dashboard.ranking_desc", { total })}
           </Text>
 
           <View style={{ flex: 1 }} />
@@ -419,7 +433,7 @@ export default function DashboardScreen() {
                   <Text style={[s.podiumName, { color: isUserHere ? GOLD : "rgba(250,245,236,0.75)" }]}>
                     {p.name}
                   </Text>
-                  <Text style={s.podiumSub}>{p.orders} pedido{p.orders !== 1 ? "s" : ""}</Text>
+                  <Text style={s.podiumSub}>{t("dashboard.ranking_orders", { count: p.orders })}</Text>
                   <View
                     style={[
                       s.podiumBlock,
@@ -443,16 +457,16 @@ export default function DashboardScreen() {
             <View style={s.userRankRow}>
               <Ionicons name="person-circle-outline" size={18} color={GOLD} />
               <Text style={[s.podiumName, { color: GOLD, flex: 1 }]}>
-                Você · #{userPos}
+                {t("dashboard.ranking_user_label", { pos: userPos })}
               </Text>
               <Text style={s.podiumSub}>
-                {paidOrders.length} pedido{paidOrders.length !== 1 ? "s" : ""}
+                {t("dashboard.ranking_orders", { count: paidOrders.length })}
               </Text>
             </View>
           )}
 
           <Text style={[s.rankDisclaimer, { color: "rgba(250,245,236,0.3)" }]}>
-            * Amostra de clientes frequentes · Dados ilustrativos
+            {t("dashboard.ranking_disclaimer")}
           </Text>
         </View>
       </View>
@@ -461,24 +475,24 @@ export default function DashboardScreen() {
 
   function SlidePersonality() {
     const tags = ["#picanha", "#bacon", "#noite", "#molho"];
-    const personality = loyalty && loyalty.cycles_completed >= 3
-      ? "Carnívoro\nFiel."
-      : "Carnívoro\nClássico.";
+    const personalityKey = loyalty && loyalty.cycles_completed >= 3
+      ? "dashboard.personality_loyal"
+      : "dashboard.personality_classic";
+    const personalityLines = t(personalityKey).split("\n");
 
     return (
       <View style={[s.slide, { width: W, backgroundColor: BG }]}>
         <View style={[s.slidePad, { justifyContent: "space-between" }]}>
           <View>
-            <Text style={[s.eyebrow, { color: SUBTLE }]}>SEU PALADAR É</Text>
+            <Text style={[s.eyebrow, { color: SUBTLE }]}>{t("dashboard.personality_eyebrow")}</Text>
             <Text style={[s.personalityTitle, { color: INK }]}>
-              {personality.split("\n")[0]}{"\n"}
+              {personalityLines[0]}{"\n"}
               <Text style={{ fontStyle: "italic", color: PRIMARY }}>
-                {personality.split("\n")[1]}
+                {personalityLines[1]}
               </Text>
             </Text>
             <Text style={[s.slideDesc, { color: MUTED, marginTop: 14 }]}>
-              Quem não muda o time vencedor: picanha, bacon, molho da casa,
-              sempre depois das 19h. Receita testada e aprovada.
+              {t("dashboard.personality_desc")}
             </Text>
           </View>
 
@@ -491,7 +505,7 @@ export default function DashboardScreen() {
           </View>
 
           <Text style={s.personalityQuote}>
-            "O ritual de sexta é sagrado." — sua história, traduzida
+            {t("dashboard.personality_quote")}
           </Text>
         </View>
       </View>
@@ -509,22 +523,21 @@ export default function DashboardScreen() {
           </View>
 
           <Text style={[s.slideTitle, { color: INK, textAlign: "center", marginTop: 18 }]}>
-            Foi{" "}
-            <Text style={{ fontStyle: "italic", color: PRIMARY }}>uma bela</Text>
-            {"\n"}jornada.
+            {t("dashboard.share_title_before")}{" "}
+            <Text style={{ fontStyle: "italic", color: PRIMARY }}>{t("dashboard.share_title_accent")}</Text>
+            {"\n"}{t("dashboard.share_title_after")}
           </Text>
           <Text style={[s.slideDesc, { color: MUTED, textAlign: "center", marginTop: 8 }]}>
-            Compartilha sua retrô e desafia a galera a bater seus{" "}
-            {paidOrders.length} pedidos.
+            {t("dashboard.share_desc", { count: paidOrders.length })}
           </Text>
 
           <TouchableOpacity style={s.shareBtn} onPress={handleShare} activeOpacity={0.85}>
             <Ionicons name="share-social-outline" size={18} color="#fff" />
-            <Text style={s.shareBtnText}>Compartilhar minha retrô</Text>
+            <Text style={s.shareBtnText}>{t("dashboard.share_btn")}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => goTo(0)} style={s.restartBtn} activeOpacity={0.7}>
-            <Text style={s.restartBtnText}>Ver no início ↺</Text>
+            <Text style={s.restartBtnText}>{t("dashboard.share_restart")}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -554,10 +567,10 @@ export default function DashboardScreen() {
           hitSlop={8}
         >
           <Ionicons name="chevron-back" size={18} color={INK} />
-          <Text style={s.topBarBtnText}>Perfil</Text>
+          <Text style={s.topBarBtnText}>{t("dashboard.back")}</Text>
         </TouchableOpacity>
 
-        <Text style={s.topBarTitle}>SUA RETROSPECTIVA</Text>
+        <Text style={s.topBarTitle}>{t("dashboard.title")}</Text>
 
         <TouchableOpacity
           onPress={() => navigation.goBack()}

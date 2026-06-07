@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     CLAUDE_API_KEY: str = ""
     CLAUDE_MODEL: str = "claude-sonnet-4-6"
 
+    # Google Gemini API (image analysis)
+    GEMINI_API_KEY: str = ""
+    GEMINI_MODEL: str = "gemini-1.5-flash"
+
     # Expo Push
     EXPO_ACCESS_TOKEN: str | None = None
 

@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 import { resetPassword } from "../services/api";
 
 const BG = "#FAF5EC";
@@ -24,6 +25,7 @@ const SERIF = Platform.select({ ios: "Georgia", android: "serif", default: "Geor
 
 export default function ResetPasswordScreen() {
   const navigation = useNavigation();
+  const { t } = useTranslation();
   const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -34,9 +36,9 @@ export default function ResetPasswordScreen() {
   const [focused, setFocused] = useState(null);
 
   const handleSubmit = async () => {
-    if (!code.trim()) { setError("Digite o código recebido por e-mail."); return; }
-    if (newPassword.length < 6) { setError("A senha deve ter ao menos 6 caracteres."); return; }
-    if (newPassword !== confirmPassword) { setError("As senhas não coincidem."); return; }
+    if (!code.trim()) { setError(t("reset_password.error_no_code")); return; }
+    if (newPassword.length < 6) { setError(t("reset_password.error_short_password")); return; }
+    if (newPassword !== confirmPassword) { setError(t("reset_password.error_password_mismatch")); return; }
 
     setLoading(true);
     setError(null);
@@ -44,7 +46,7 @@ export default function ResetPasswordScreen() {
       await resetPassword(code.trim().toUpperCase(), newPassword);
       setDone(true);
     } catch (err) {
-      setError(err.message || "Código inválido ou expirado.");
+      setError(err.message || t("reset_password.error_invalid_code"));
     } finally {
       setLoading(false);
     }
@@ -54,14 +56,14 @@ export default function ResetPasswordScreen() {
     return (
       <View style={styles.doneContainer}>
         <Ionicons name="checkmark-circle" size={72} color={PRIMARY} />
-        <Text style={styles.doneTitle}>Senha redefinida!</Text>
-        <Text style={styles.doneText}>Faça login com sua nova senha.</Text>
+        <Text style={styles.doneTitle}>{t("reset_password.done_title")}</Text>
+        <Text style={styles.doneText}>{t("reset_password.done_text")}</Text>
         <TouchableOpacity
           style={styles.submitBtn}
           onPress={() => navigation.navigate("Login")}
           activeOpacity={0.85}
         >
-          <Text style={styles.submitBtnText}>Ir para o login</Text>
+          <Text style={styles.submitBtnText}>{t("reset_password.btn_go_login")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -82,16 +84,13 @@ export default function ResetPasswordScreen() {
         </TouchableOpacity>
 
         <View style={styles.header}>
-          <Text style={styles.title}>Nova senha</Text>
-          <Text style={styles.subtitle}>
-            Digite o código de 6 caracteres que enviamos para o seu e-mail e escolha uma nova senha.
-          </Text>
+          <Text style={styles.title}>{t("reset_password.title")}</Text>
+          <Text style={styles.subtitle}>{t("reset_password.subtitle")}</Text>
         </View>
 
         <View style={styles.form}>
-          {/* Code */}
           <View style={styles.field}>
-            <Text style={styles.label}>Código</Text>
+            <Text style={styles.label}>{t("reset_password.label_code")}</Text>
             <View style={[styles.inputRow, focused === "code" && styles.inputRowFocus]}>
               <Ionicons name="key-outline" size={18} color={MUTED} style={styles.icon} />
               <TextInput
@@ -109,14 +108,13 @@ export default function ResetPasswordScreen() {
             </View>
           </View>
 
-          {/* New password */}
           <View style={styles.field}>
-            <Text style={styles.label}>Nova senha</Text>
+            <Text style={styles.label}>{t("reset_password.label_new_password")}</Text>
             <View style={[styles.inputRow, focused === "pw" && styles.inputRowFocus]}>
               <Ionicons name="lock-closed-outline" size={18} color={MUTED} style={styles.icon} />
               <TextInput
                 style={[styles.inputText, { flex: 1 }]}
-                placeholder="Mínimo 6 caracteres"
+                placeholder={t("reset_password.placeholder_new_password")}
                 placeholderTextColor={PLACEHOLDER}
                 secureTextEntry={!showPw}
                 value={newPassword}
@@ -130,14 +128,13 @@ export default function ResetPasswordScreen() {
             </View>
           </View>
 
-          {/* Confirm password */}
           <View style={styles.field}>
-            <Text style={styles.label}>Confirmar senha</Text>
+            <Text style={styles.label}>{t("reset_password.label_confirm_password")}</Text>
             <View style={[styles.inputRow, focused === "confirm" && styles.inputRowFocus]}>
               <Ionicons name="lock-closed-outline" size={18} color={MUTED} style={styles.icon} />
               <TextInput
                 style={[styles.inputText, { flex: 1 }]}
-                placeholder="Repita a nova senha"
+                placeholder={t("reset_password.placeholder_confirm")}
                 placeholderTextColor={PLACEHOLDER}
                 secureTextEntry={!showPw}
                 value={confirmPassword}
@@ -164,7 +161,7 @@ export default function ResetPasswordScreen() {
             {loading ? (
               <ActivityIndicator color="#fff" size="small" />
             ) : (
-              <Text style={styles.submitBtnText}>Redefinir senha</Text>
+              <Text style={styles.submitBtnText}>{t("reset_password.btn_submit")}</Text>
             )}
           </TouchableOpacity>
         </View>

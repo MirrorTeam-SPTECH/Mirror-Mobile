@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTranslation } from "react-i18next";
 import Svg, {
   Path, Circle, Rect, Ellipse, Line,
   Defs, RadialGradient, Stop,
@@ -24,33 +25,6 @@ const INK     = "#2A1E14";
 const MUTED   = "#7A6A56";
 const SUBTLE  = "#8A7558";
 const SERIF = Platform.select({ ios: "Georgia", android: "serif", default: "Georgia" });
-
-const SLIDES = [
-  {
-    kind:    "burger",
-    eyebrow: "Bem-vindo",
-    before:  "A mais alta qualidade em ",
-    accent:  "lanches artesanais",
-    after:   ".",
-    sub:     "Carnes selecionadas, pão fresco do dia, e aquele capricho que só vê de pertinho.",
-  },
-  {
-    kind:    "flame",
-    eyebrow: "Feito com tempo",
-    before:  "Cada pedido sai da chapa ",
-    accent:  "na hora.",
-    after:   "",
-    sub:     "Você pede, a gente acende o fogo. Nada de esquentar, nada de pressa.",
-  },
-  {
-    kind:    "bag",
-    eyebrow: "Chega quentinho",
-    before:  "Entrega rápida, do nosso bairro ",
-    accent:  "pro seu.",
-    after:   "",
-    sub:     "Acompanhe em tempo real, com estimativa precisa e zero surpresa.",
-  },
-];
 
 // ─── Ilustrações SVG ────────────────────────────────────────────────────────
 
@@ -131,7 +105,36 @@ function HeroIllustration({ kind, size }) {
 // ─── Tela principal ──────────────────────────────────────────────────────────
 
 export default function OnboardingScreen({ navigation }) {
+  const { t } = useTranslation();
   const [idx, setIdx] = useState(0);
+
+  const SLIDES = [
+    {
+      kind:   "burger",
+      eyebrow: t("onboarding.slide1_eyebrow"),
+      before:  t("onboarding.slide1_before"),
+      accent:  t("onboarding.slide1_accent"),
+      after:   t("onboarding.slide1_after"),
+      sub:     t("onboarding.slide1_sub"),
+    },
+    {
+      kind:   "flame",
+      eyebrow: t("onboarding.slide2_eyebrow"),
+      before:  t("onboarding.slide2_before"),
+      accent:  t("onboarding.slide2_accent"),
+      after:   t("onboarding.slide2_after"),
+      sub:     t("onboarding.slide2_sub"),
+    },
+    {
+      kind:   "bag",
+      eyebrow: t("onboarding.slide3_eyebrow"),
+      before:  t("onboarding.slide3_before"),
+      accent:  t("onboarding.slide3_accent"),
+      after:   t("onboarding.slide3_after"),
+      sub:     t("onboarding.slide3_sub"),
+    },
+  ];
+
   const isLast = idx === SLIDES.length - 1;
   const slide  = SLIDES[idx];
 
@@ -162,7 +165,7 @@ export default function OnboardingScreen({ navigation }) {
         <Text style={styles.eyebrow}>{slide.eyebrow}</Text>
         {!isLast && (
           <TouchableOpacity onPress={handleSkip} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Text style={styles.skipText}>Pular</Text>
+            <Text style={styles.skipText}>{t("onboarding.skip")}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -196,13 +199,13 @@ export default function OnboardingScreen({ navigation }) {
 
         {/* CTA principal */}
         <TouchableOpacity style={styles.ctaBtn} onPress={handleNext} activeOpacity={0.88}>
-          <Text style={styles.ctaText}>{isLast ? "Começar" : "Próximo"}</Text>
+          <Text style={styles.ctaText}>{isLast ? t("onboarding.btn_start") : t("onboarding.btn_next")}</Text>
         </TouchableOpacity>
 
         {/* Atalho secundário */}
         {!isLast && (
           <TouchableOpacity style={styles.skipBtn} onPress={finish} activeOpacity={0.7}>
-            <Text style={styles.skipBtnText}>Ir direto pro app</Text>
+            <Text style={styles.skipBtnText}>{t("onboarding.btn_skip_to_app")}</Text>
           </TouchableOpacity>
         )}
       </View>

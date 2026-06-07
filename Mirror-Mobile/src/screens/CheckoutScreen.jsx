@@ -12,11 +12,13 @@ import {
   Modal,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import { useTranslation } from "react-i18next";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { createOrder, createPaymentPreference, formatPrice } from "../services/api";
 
 export default function CheckoutScreen({ navigation }) {
+  const { t } = useTranslation();
   const { cart, getCartTotal, clearCart } = useCart();
   const { user, isLoggedIn } = useAuth();
 
@@ -24,16 +26,15 @@ export default function CheckoutScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
 
-  // Usuário não autenticado — pede login
   if (!isLoggedIn) {
     return (
       <View style={[styles.container, styles.center]}>
-        <Text style={styles.loginPrompt}>Faça login para finalizar o pedido</Text>
+        <Text style={styles.loginPrompt}>{t("checkout.login_prompt")}</Text>
         <TouchableOpacity
           style={styles.loginButton}
           onPress={() => navigation.navigate("Login")}
         >
-          <Text style={styles.loginButtonText}>Fazer Login</Text>
+          <Text style={styles.loginButtonText}>{t("checkout.btn_login")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -71,7 +72,6 @@ export default function CheckoutScreen({ navigation }) {
       clearCart();
 
       if (isMock) {
-        // Mostra tela de "processando" por 1,5s para dar sensação de pagamento real
         setLoading(false);
         setProcessingPayment(true);
         setTimeout(() => {
@@ -85,9 +85,9 @@ export default function CheckoutScreen({ navigation }) {
     } catch (error) {
       setLoading(false);
       Alert.alert(
-        "Erro ao criar pedido",
-        error.message || "Tente novamente.",
-        [{ text: "OK" }]
+        t("checkout.error_title"),
+        error.message || t("checkout.error_default"),
+        [{ text: t("common.ok") }]
       );
     }
   };
@@ -100,8 +100,8 @@ export default function CheckoutScreen({ navigation }) {
         <View style={styles.processingOverlay}>
           <View style={styles.processingCard}>
             <ActivityIndicator size="large" color="#009EE3" />
-            <Text style={styles.processingTitle}>Processando pagamento</Text>
-            <Text style={styles.processingSubtitle}>Aguarde um instante...</Text>
+            <Text style={styles.processingTitle}>{t("checkout.processing_title")}</Text>
+            <Text style={styles.processingSubtitle}>{t("checkout.processing_subtitle")}</Text>
           </View>
         </View>
       </Modal>
@@ -110,20 +110,20 @@ export default function CheckoutScreen({ navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Finalizar Pedido</Text>
+        <Text style={styles.headerTitle}>{t("checkout.title")}</Text>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Dados do cliente */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Suas Informações</Text>
+          <Text style={styles.sectionTitle}>{t("checkout.your_info")}</Text>
           <Text style={styles.userInfo}>{user.name}</Text>
           <Text style={styles.userEmail}>{user.email}</Text>
         </View>
 
         {/* Resumo do pedido */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Resumo do Pedido</Text>
+          <Text style={styles.sectionTitle}>{t("checkout.order_summary")}</Text>
           {cart.map((item, index) => (
             <View key={item.cartItemId} style={styles.orderItem}>
               <View style={styles.orderItemHeader}>
@@ -151,10 +151,10 @@ export default function CheckoutScreen({ navigation }) {
 
         {/* Observações */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Observações</Text>
+          <Text style={styles.sectionTitle}>{t("checkout.notes")}</Text>
           <TextInput
             style={[styles.input, styles.textArea]}
-            placeholder="Ex: sem cebola, bem passado..."
+            placeholder={t("checkout.notes_placeholder")}
             multiline
             numberOfLines={3}
             value={notes}
@@ -164,18 +164,16 @@ export default function CheckoutScreen({ navigation }) {
 
         {/* Retirada */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Retirada no Local</Text>
-          <Text style={styles.pickupText}>
-            Você receberá um <Text style={styles.bold}>código de retirada</Text> após o pagamento.
-          </Text>
+          <Text style={styles.sectionTitle}>{t("checkout.pickup_title")}</Text>
+          <Text style={styles.pickupText}>{t("checkout.pickup_text")}</Text>
         </View>
 
         {/* Pagamento */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Forma de Pagamento</Text>
+          <Text style={styles.sectionTitle}>{t("checkout.payment_title")}</Text>
           <View style={styles.paymentMethod}>
-            <Text style={styles.paymentMethodText}>Mercado Pago</Text>
-            <Text style={styles.paymentMethodHint}>Pix, Cartão de Crédito e mais</Text>
+            <Text style={styles.paymentMethodText}>{t("checkout.payment_method")}</Text>
+            <Text style={styles.paymentMethodHint}>{t("checkout.payment_hint")}</Text>
           </View>
         </View>
 
@@ -184,7 +182,7 @@ export default function CheckoutScreen({ navigation }) {
 
       <View style={styles.bottomBar}>
         <View>
-          <Text style={styles.bottomLabel}>Total a Pagar</Text>
+          <Text style={styles.bottomLabel}>{t("checkout.total_label")}</Text>
           <Text style={styles.bottomTotal}>{formatPrice(getCartTotal())}</Text>
         </View>
         <TouchableOpacity
@@ -195,7 +193,7 @@ export default function CheckoutScreen({ navigation }) {
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.payButtonText}>Pagar com Mercado Pago</Text>
+            <Text style={styles.payButtonText}>{t("checkout.btn_pay")}</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -250,7 +248,6 @@ const styles = StyleSheet.create({
   orderItemOption: { fontSize: 13, color: "#666", marginBottom: 2 },
   divider: { height: 1, backgroundColor: "#eee", marginTop: 10 },
   pickupText: { fontSize: 14, color: "#666", lineHeight: 20 },
-  bold: { fontWeight: "bold", color: "#C41E3A" },
   paymentMethod: {
     backgroundColor: "#f9f9f9",
     borderRadius: 8,
