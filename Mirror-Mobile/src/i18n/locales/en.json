@@ -11,7 +11,11 @@
     "greeting_name": "Hi, {{name}}. ",
     "greeting": "Hello! ",
     "question": "What'll it be?",
-    "section_start": "Start it right"
+    "section_start": "Start it right",
+    "truck_open": "Open now • closes at {{closes}}",
+    "truck_closed_today": "Closed now • opens today at 11am",
+    "truck_closed_next": "Closed • opens {{day}} at 11am",
+    "truck_weekdays": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
   },
   "search": {
     "placeholder": "Search burgers, sides, drinks..."

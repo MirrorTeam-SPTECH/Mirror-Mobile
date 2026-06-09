@@ -11,7 +11,11 @@
     "greeting_name": "Olá, {{name}}. ",
     "greeting": "Olá! ",
     "question": "O que vai ser?",
-    "section_start": "Pra começar bem"
+    "section_start": "Pra começar bem",
+    "truck_open": "Aberto agora • fecha às {{closes}}",
+    "truck_closed_today": "Fechado agora • abre hoje às 11h",
+    "truck_closed_next": "Fechado • abre {{day}} às 11h",
+    "truck_weekdays": ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"]
   },
   "search": {
     "placeholder": "Buscar picanha, costela, linguiça..."

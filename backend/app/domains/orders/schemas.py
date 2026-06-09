@@ -149,6 +149,7 @@ class OrderResponse(BaseModel):
 
 
 class OrderItemSummary(BaseModel):
+    product_id: int
     name_snapshot: str
     quantity: int
 
