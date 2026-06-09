@@ -31,6 +31,12 @@ def _is_key_configured() -> bool:
 
 # ─── Mock responses ───────────────────────────────────────────────────────────
 
+_NARRATIVE_MOCK = (
+    "Este lanche é uma boa fonte de proteínas e energia para o seu dia! "
+    "A combinação de ingredientes garante sabor sem abrir mão da nutrição. "
+    "Aproveite com moderação — cada mordida é feita com ingredientes frescos e selecionados com carinho."
+)
+
 _GRILL_MOCK = (
     "Sua carne está ao ponto — a coloração dourada nas bordas com interior ainda suculento "
     "indica uma temperatura de grelha bem controlada. A selagem está ótima, mantendo os "
@@ -149,7 +155,7 @@ def _analyze_image(prompt: str, image_base64: str, media_type: str) -> str | Non
 
 def generate_nutrition_narrative(nutrition: NutritionInfo, product_name: str) -> str | None:
     if not _claude_ok():
-        return None
+        return _NARRATIVE_MOCK
 
     client = anthropic.Anthropic(api_key=settings.CLAUDE_API_KEY)
     top_names = ", ".join(i.name for i in nutrition.top_ingredients) if nutrition.top_ingredients else "não informados"
@@ -167,12 +173,16 @@ def generate_nutrition_narrative(nutrition: NutritionInfo, product_name: str) ->
         f"Não use listas, escreva em parágrafo corrido."
     )
 
-    message = client.messages.create(
-        model=settings.CLAUDE_MODEL,
-        max_tokens=200,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    return message.content[0].text
+    try:
+        message = client.messages.create(
+            model=settings.CLAUDE_MODEL,
+            max_tokens=200,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return message.content[0].text
+    except Exception as e:
+        logger.error("Claude narrative failed", extra={"error": str(e)})
+        return _NARRATIVE_MOCK
 
 
 def generate_nutrition_ranking_narrative(
@@ -198,12 +208,16 @@ def generate_nutrition_ranking_narrative(
         "positiva sobre aproveitar a refeição. Seja divertido, não assustador. Sem listas."
     )
 
-    message = client.messages.create(
-        model=settings.CLAUDE_MODEL,
-        max_tokens=250,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    return message.content[0].text
+    try:
+        message = client.messages.create(
+            model=settings.CLAUDE_MODEL,
+            max_tokens=250,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return message.content[0].text
+    except Exception as e:
+        logger.error("Claude ranking narrative failed", extra={"error": str(e)})
+        return ""
 
 
 def analyze_grill_image(image_base64: str, media_type: str) -> str:
