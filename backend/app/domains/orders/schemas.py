@@ -3,6 +3,8 @@ from pydantic import BaseModel, Field
 from typing import Optional
 
 
+
+
 # ============================================================================
 # Category Schemas
 # ============================================================================
@@ -104,6 +106,7 @@ class OrderCreate(BaseModel):
 
 class OrderItemOptionResponse(BaseModel):
     id: int
+    option_id: int
     option_name_snapshot: str
     price_delta_cents: int
 
@@ -201,3 +204,25 @@ class LoyaltyResponse(BaseModel):
     stamps_in_cycle: int
     cycles_completed: int
     recent_stamps: list[LoyaltyStampItem] = []
+
+
+# ============================================================================
+# Rating Schemas
+# ============================================================================
+
+class RatingCreate(BaseModel):
+    stars: int = Field(ge=1, le=5)
+    comment: Optional[str] = None
+    image_base64: Optional[str] = None
+
+
+class RatingResponse(BaseModel):
+    id: int
+    order_id: int
+    stars: int
+    comment: Optional[str] = None
+    has_image: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

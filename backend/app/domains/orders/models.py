@@ -153,6 +153,7 @@ class Order(Base):
     user = relationship("User", back_populates="orders")
     items = relationship("OrderItem", back_populates="order")
     payment = relationship("Payment", back_populates="order", uselist=False)
+    rating = relationship("Rating", back_populates="order", uselist=False)
 
     def __repr__(self):
         return f"<Order(id={self.id}, user_id={self.user_id}, status={self.status}, total_cents={self.total_cents})>"
@@ -250,6 +251,28 @@ class Favorite(Base):
 
     def __repr__(self):
         return f"<Favorite(user_id={self.user_id}, product_id={self.product_id})>"
+
+
+class Rating(Base):
+    """
+    Customer rating for a delivered order.
+    One rating per order (unique constraint on order_id).
+    image_base64 is stored as Text — acceptable for MVP scale.
+    """
+    __tablename__ = "rating"
+
+    id = Column(Integer, primary_key=True, index=True)
+    order_id = Column(Integer, ForeignKey("order.id"), nullable=False, unique=True)
+    user_id = Column(Integer, ForeignKey("user.id"), nullable=False)
+    stars = Column(Integer, CheckConstraint("stars >= 1 AND stars <= 5"), nullable=False)
+    comment = Column(Text, nullable=True)
+    image_base64 = Column(Text, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    order = relationship("Order", back_populates="rating")
+
+    def __repr__(self):
+        return f"<Rating(id={self.id}, order_id={self.order_id}, stars={self.stars})>"
 
 
 # Create indexes for common queries

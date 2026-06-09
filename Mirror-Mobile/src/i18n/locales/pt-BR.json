@@ -125,7 +125,12 @@
     "modal_loading": "Consultando nutricionista...",
     "modal_load_error": "Não foi possível carregar.",
     "modal_ranking": "Ranking calórico",
-    "modal_disclaimer": "* Valores orientativos. Podem variar conforme preparo e customizações."
+    "modal_disclaimer": "* Valores orientativos. Podem variar conforme preparo e customizações.",
+    "btn_reorder": "Repetir",
+    "reorder_title": "Repetir pedido",
+    "reorder_confirm": "Isso vai substituir os itens atuais do seu carrinho. Continuar?",
+    "reorder_ok": "Sim, substituir",
+    "reorder_error": "Não foi possível carregar o pedido. Tente novamente."
   },
   "order_tracking": {
     "title": "Acompanhar Pedido",
@@ -145,6 +150,19 @@
     "loading": "Carregando pedido...",
     "not_found": "Pedido não encontrado",
     "load_error": "Não foi possível carregar o pedido."
+  },
+  "rating": {
+    "title": "Como foi seu pedido?",
+    "thank_you": "Obrigado pelo feedback!",
+    "submit": "Enviar avaliação",
+    "comment_placeholder": "Deixe um comentário (opcional)...",
+    "add_photo_camera": "Câmera",
+    "add_photo_gallery": "Galeria",
+    "remove_photo": "Remover foto",
+    "error": "Não foi possível enviar sua avaliação. Tente novamente.",
+    "perm_title": "Permissão necessária",
+    "perm_camera": "Permita o acesso à câmera nas configurações.",
+    "perm_gallery": "Permita o acesso à galeria nas configurações."
   },
   "loyalty": {
     "title": "Fidelidade",

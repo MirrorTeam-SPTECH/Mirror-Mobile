@@ -3,7 +3,7 @@ from typing import Optional
 from sqlalchemy.orm import Session, joinedload
 
 from app.domains.orders.models import (
-    Order, OrderItem, OrderItemOption, Payment, OrderStatus,
+    Order, OrderItem, OrderItemOption, Payment, OrderStatus, Rating,
 )
 from app.domains.orders.services import generate_pickup_code, validate_status_transition
 
@@ -105,3 +105,25 @@ class OrderRepository:
             if mp_status == "approved":
                 payment.paid_at = datetime.utcnow()
             self.db.commit()
+
+    def get_rating(self, order_id: int) -> Optional[Rating]:
+        return self.db.query(Rating).filter(Rating.order_id == order_id).first()
+
+    def create_rating(
+        self,
+        order_id: int,
+        user_id: int,
+        stars: int,
+        comment: Optional[str],
+        image_base64: Optional[str],
+    ) -> Rating:
+        rating = Rating(
+            order_id=order_id,
+            user_id=user_id,
+            stars=stars,
+            comment=comment,
+            image_base64=image_base64,
+        )
+        self.db.add(rating)
+        self.db.commit()
+        return rating

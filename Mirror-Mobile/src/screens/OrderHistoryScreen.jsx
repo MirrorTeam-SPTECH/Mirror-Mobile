@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
+  Alert,
   StyleSheet,
   Text,
   View,
@@ -13,7 +14,8 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
-import { getOrders, formatPrice, getNutritionRanking } from "../services/api";
+import { getOrders, getOrderById, formatPrice, getNutritionRanking } from "../services/api";
+import { useCart } from "../context/CartContext";
 
 const PRIMARY = "#C41E3A";
 const BG = "#FAF5EC";
@@ -111,7 +113,7 @@ function NutritionModal({ orderId, onClose }) {
   );
 }
 
-function OrderCard({ order, onPress, onNutritionPress }) {
+function OrderCard({ order, onPress, onNutritionPress, onReorderPress, reordering }) {
   const { t, i18n } = useTranslation();
   const STATUS_LABEL = {
     pending_payment: t("order_history.status_pending"),
@@ -161,6 +163,18 @@ function OrderCard({ order, onPress, onNutritionPress }) {
               <Text style={styles.nutritionBtnText}>{t("order_history.btn_nutrition")}</Text>
             </TouchableOpacity>
           )}
+          <TouchableOpacity
+            style={[styles.reorderBtn, reordering && { opacity: 0.5 }]}
+            onPress={(e) => { e.stopPropagation(); onReorderPress(); }}
+            activeOpacity={0.75}
+            disabled={reordering}
+          >
+            {reordering
+              ? <ActivityIndicator size={12} color="#fff" />
+              : <Ionicons name="refresh-outline" size={13} color="#fff" />
+            }
+            <Text style={styles.reorderBtnText}>{t("order_history.btn_reorder")}</Text>
+          </TouchableOpacity>
           <Text style={styles.arrow}>›</Text>
         </View>
       </View>
@@ -170,12 +184,58 @@ function OrderCard({ order, onPress, onNutritionPress }) {
 
 export default function OrderHistoryScreen({ navigation }) {
   const { t } = useTranslation();
+  const { cart, addToCart, clearCart } = useCart();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [nutritionOrderId, setNutritionOrderId] = useState(null);
+  const [reorderingId, setReorderingId] = useState(null);
 
   const HIDE_STATUSES = new Set(["pending_payment", "cancelled"]);
+
+  const handleReorder = useCallback(async (order) => {
+    if (reorderingId) return;
+
+    const doReorder = async () => {
+      setReorderingId(order.id);
+      try {
+        const full = await getOrderById(order.id);
+        clearCart();
+        (full.items || []).forEach((item) => {
+          addToCart({
+            productId: item.product_id,
+            productName: item.name_snapshot,
+            basePriceCents: item.unit_price_cents,
+            imageUrl: null,
+            quantity: item.quantity,
+            selectedOptions: (item.options || []).map((opt) => ({
+              optionId: opt.option_id,
+              optionName: opt.option_name_snapshot,
+              priceDeltaCents: opt.price_delta_cents,
+            })),
+          });
+        });
+        navigation.navigate("Main", { screen: "Orders" });
+      } catch {
+        Alert.alert(t("order_history.reorder_error"));
+      } finally {
+        setReorderingId(null);
+      }
+    };
+
+    if (cart.length > 0) {
+      Alert.alert(
+        t("order_history.reorder_title"),
+        t("order_history.reorder_confirm"),
+        [
+          { text: t("common.cancel"), style: "cancel" },
+          { text: t("order_history.reorder_ok"), onPress: doReorder },
+        ]
+      );
+    } else {
+      doReorder();
+    }
+  }, [reorderingId, cart, addToCart, clearCart, navigation, t]);
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -234,6 +294,8 @@ export default function OrderHistoryScreen({ navigation }) {
               order={item}
               onPress={() => navigation.navigate("OrderTracking", { orderId: item.id })}
               onNutritionPress={() => setNutritionOrderId(item.id)}
+              onReorderPress={() => handleReorder(item)}
+              reordering={reorderingId === item.id}
             />
           )}
           contentContainerStyle={styles.list}
@@ -296,6 +358,18 @@ const styles = StyleSheet.create({
     borderColor: PRIMARY,
   },
   nutritionBtnText: { fontSize: 12, color: PRIMARY, fontWeight: "600" },
+  reorderBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 20,
+    backgroundColor: PRIMARY,
+    minWidth: 28,
+    justifyContent: "center",
+  },
+  reorderBtnText: { fontSize: 12, color: "#fff", fontWeight: "600" },
   arrow: { fontSize: 22, color: "#ccc" },
   emptyIcon: { fontSize: 56, marginBottom: 16 },
   emptyTitle: { fontSize: 18, fontWeight: "600", color: "#333", marginBottom: 8 },

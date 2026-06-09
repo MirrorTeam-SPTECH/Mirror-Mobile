@@ -22,6 +22,8 @@ from app.domains.orders.schemas import (
     PayPreferenceResponse,
     LoyaltyStampItem,
     LoyaltyResponse,
+    RatingCreate,
+    RatingResponse,
 )
 from app.domains.orders.repository import OrderRepository
 
@@ -240,6 +242,51 @@ def get_loyalty(
     )
 
 
+def _to_rating_response(rating) -> RatingResponse:
+    return RatingResponse(
+        id=rating.id,
+        order_id=rating.order_id,
+        stars=rating.stars,
+        comment=rating.comment,
+        has_image=rating.image_base64 is not None,
+        created_at=rating.created_at,
+    )
+
+
+@router.get("/orders/{order_id}/rating", response_model=RatingResponse)
+def get_order_rating(
+    order_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    repo = OrderRepository(db)
+    order = repo.get_by_id(order_id, user_id=current_user.id)
+    if not order:
+        raise HTTPException(status_code=404, detail="Pedido não encontrado")
+    rating = repo.get_rating(order_id)
+    if not rating:
+        raise HTTPException(status_code=404, detail="Nenhuma avaliação encontrada")
+    return _to_rating_response(rating)
+
+
+@router.post("/orders/{order_id}/rating", response_model=RatingResponse, status_code=201)
+def submit_order_rating(
+    order_id: int,
+    body: RatingCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    repo = OrderRepository(db)
+    order = repo.get_by_id(order_id, user_id=current_user.id)
+    if not order:
+        raise HTTPException(status_code=404, detail="Pedido não encontrado")
+    if order.status != OrderStatus.DELIVERED:
+        raise HTTPException(status_code=400, detail="Só é possível avaliar pedidos entregues")
+    if repo.get_rating(order_id):
+        raise HTTPException(status_code=409, detail="Pedido já foi avaliado")
+    rating = repo.create_rating(order_id, current_user.id, body.stars, body.comment, body.image_base64)
+    return _to_rating_response(rating)
+
 @router.get("/orders/{order_id}", response_model=OrderResponse)
 def get_order(
     order_id: int,
@@ -331,10 +378,13 @@ def create_payment_preference(
     if not _has_real_token:
         repo.set_payment_preference(order.id, "mock-paid")
         repo.confirm_payment(order.id, f"mock-{order.id}", "approved")
-        try:
-            repo.update_status(order.id, "paid")
-        except ValueError:
-            pass
+        # Em modo mock avança direto até delivered para permitir testar
+        # rating, histórico e fluxo completo sem operador real
+        for next_status in ("paid", "preparing", "ready", "delivered"):
+            try:
+                repo.update_status(order.id, next_status)
+            except ValueError:
+                pass
         return PayPreferenceResponse(
             init_point=None,
             sandbox_init_point=None,

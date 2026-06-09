@@ -197,6 +197,21 @@ export async function analyzeLabelScanner(imageBase64, mediaType = 'image/jpeg')
 }
 
 // ============================================================================
+// Ratings
+// ============================================================================
+
+export async function getRating(orderId) {
+  return fetchAPI(`/orders/${orderId}/rating`);
+}
+
+export async function submitRating(orderId, stars, comment, image_base64) {
+  return fetchAPI(`/orders/${orderId}/rating`, {
+    method: 'POST',
+    body: JSON.stringify({ stars, comment, image_base64 }),
+  });
+}
+
+// ============================================================================
 // Truck
 // ============================================================================
 

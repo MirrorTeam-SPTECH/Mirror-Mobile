@@ -125,7 +125,12 @@
     "modal_loading": "Consulting nutritionist...",
     "modal_load_error": "Could not load.",
     "modal_ranking": "Calorie ranking",
-    "modal_disclaimer": "* Estimated values. May vary with preparation and customizations."
+    "modal_disclaimer": "* Estimated values. May vary with preparation and customizations.",
+    "btn_reorder": "Reorder",
+    "reorder_title": "Reorder",
+    "reorder_confirm": "This will replace the current items in your cart. Continue?",
+    "reorder_ok": "Yes, replace",
+    "reorder_error": "Could not load the order. Please try again."
   },
   "order_tracking": {
     "title": "Track Order",
@@ -145,6 +150,19 @@
     "loading": "Loading order...",
     "not_found": "Order not found",
     "load_error": "Could not load order."
+  },
+  "rating": {
+    "title": "How was your order?",
+    "thank_you": "Thanks for your feedback!",
+    "submit": "Submit review",
+    "comment_placeholder": "Leave a comment (optional)...",
+    "add_photo_camera": "Camera",
+    "add_photo_gallery": "Gallery",
+    "remove_photo": "Remove photo",
+    "error": "Could not submit your review. Please try again.",
+    "perm_title": "Permission required",
+    "perm_camera": "Please allow camera access in your settings.",
+    "perm_gallery": "Please allow gallery access in your settings."
   },
   "loyalty": {
     "title": "Loyalty",
