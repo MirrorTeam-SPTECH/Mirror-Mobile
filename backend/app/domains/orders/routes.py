@@ -24,6 +24,7 @@ from app.domains.orders.schemas import (
     LoyaltyResponse,
     RatingCreate,
     RatingResponse,
+    ETAResponse,
 )
 from app.domains.orders.repository import OrderRepository
 
@@ -286,6 +287,30 @@ def submit_order_rating(
         raise HTTPException(status_code=409, detail="Pedido já foi avaliado")
     rating = repo.create_rating(order_id, current_user.id, body.stars, body.comment, body.image_base64)
     return _to_rating_response(rating)
+
+@router.get("/orders/{order_id}/eta", response_model=ETAResponse)
+def get_order_eta(
+    order_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    repo = OrderRepository(db)
+    order = repo.get_by_id(order_id, user_id=current_user.id)
+    if not order:
+        raise HTTPException(status_code=404, detail="Pedido não encontrado")
+
+    if order.status not in (OrderStatus.PAID, OrderStatus.PREPARING):
+        return ETAResponse(estimated_minutes=None)
+
+    total_minutes = (
+        db.query(func.sum(Product.prep_minutes * OrderItem.quantity))
+        .join(OrderItem, OrderItem.product_id == Product.id)
+        .filter(OrderItem.order_id == order_id)
+        .scalar()
+    )
+
+    return ETAResponse(estimated_minutes=int(total_minutes) if total_minutes else 15)
+
 
 @router.get("/orders/{order_id}", response_model=OrderResponse)
 def get_order(

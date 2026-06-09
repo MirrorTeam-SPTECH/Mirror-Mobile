@@ -149,7 +149,8 @@
     "btn_home": "Back to Home",
     "loading": "Loading order...",
     "not_found": "Order not found",
-    "load_error": "Could not load order."
+    "load_error": "Could not load order.",
+    "eta_value": "~{{minutes}} min"
   },
   "rating": {
     "title": "How was your order?",

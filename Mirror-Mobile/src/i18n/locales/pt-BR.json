@@ -149,7 +149,8 @@
     "btn_home": "Voltar ao Início",
     "loading": "Carregando pedido...",
     "not_found": "Pedido não encontrado",
-    "load_error": "Não foi possível carregar o pedido."
+    "load_error": "Não foi possível carregar o pedido.",
+    "eta_value": "~{{minutes}} min"
   },
   "rating": {
     "title": "Como foi seu pedido?",

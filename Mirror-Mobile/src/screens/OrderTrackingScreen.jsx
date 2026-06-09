@@ -14,7 +14,7 @@ import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useTranslation } from "react-i18next";
-import { getOrderById, getRating, submitRating, formatPrice } from "../services/api";
+import { getOrderById, getOrderETA, getRating, submitRating, formatPrice } from "../services/api";
 
 const STATUS_COLOR = {
   pending_payment: "#F39C12",
@@ -46,6 +46,10 @@ export default function OrderTrackingScreen({ route, navigation }) {
   const [error, setError] = useState(null);
   const intervalRef = useRef(null);
 
+  // ETA state
+  const [etaMinutes, setEtaMinutes] = useState(null);
+  const [etaFetchedStatus, setEtaFetchedStatus] = useState(null);
+
   // Rating state
   const [existingRating, setExistingRating] = useState(null);
   const [ratingChecked, setRatingChecked] = useState(false);
@@ -75,6 +79,19 @@ export default function OrderTrackingScreen({ route, navigation }) {
     intervalRef.current = setInterval(fetchOrder, POLL_INTERVAL_MS);
     return () => clearInterval(intervalRef.current);
   }, [orderId]);
+
+  useEffect(() => {
+    const status = order?.status;
+    if ((status === "paid" || status === "preparing") && status !== etaFetchedStatus) {
+      setEtaFetchedStatus(status);
+      getOrderETA(orderId)
+        .then((r) => setEtaMinutes(r.estimated_minutes ?? null))
+        .catch(() => {});
+    }
+    if (status !== "paid" && status !== "preparing") {
+      setEtaMinutes(null);
+    }
+  }, [order?.status, etaFetchedStatus, orderId]);
 
   useEffect(() => {
     if (order?.status === "delivered" && !ratingChecked) {
@@ -166,6 +183,12 @@ export default function OrderTrackingScreen({ route, navigation }) {
         <View style={[styles.statusCard, { borderLeftColor: statusColor }]}>
           <Text style={styles.statusCardLabel}>{t("order_tracking.status_label")}</Text>
           <Text style={[styles.statusText, { color: statusColor }]}>{statusLabel}</Text>
+          {etaMinutes !== null && (
+            <View style={styles.etaRow}>
+              <Ionicons name="time-outline" size={14} color="#8A7558" />
+              <Text style={styles.etaText}>{t("order_tracking.eta_value", { minutes: etaMinutes })}</Text>
+            </View>
+          )}
           {!isTerminal && (
             <Text style={styles.pollingHint}>{t("order_tracking.polling_hint")}</Text>
           )}
@@ -328,7 +351,9 @@ const styles = StyleSheet.create({
   },
   statusCardLabel: { fontSize: 12, color: "#999", marginBottom: 6, textTransform: "uppercase" },
   statusText: { fontSize: 22, fontWeight: "bold" },
-  pollingHint: { fontSize: 12, color: "#bbb", marginTop: 8 },
+  etaRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 8 },
+  etaText: { fontSize: 13, color: "#8A7558", fontWeight: "600" },
+  pollingHint: { fontSize: 12, color: "#bbb", marginTop: 6 },
   pickupCard: {
     backgroundColor: "#C41E3A",
     marginHorizontal: 15,

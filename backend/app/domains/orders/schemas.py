@@ -226,3 +226,11 @@ class RatingResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# ============================================================================
+# ETA Schema
+# ============================================================================
+
+class ETAResponse(BaseModel):
+    estimated_minutes: Optional[int] = None

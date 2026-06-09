@@ -200,6 +200,10 @@ export async function analyzeLabelScanner(imageBase64, mediaType = 'image/jpeg')
 // Ratings
 // ============================================================================
 
+export async function getOrderETA(orderId) {
+  return fetchAPI(`/orders/${orderId}/eta`);
+}
+
 export async function getRating(orderId) {
   return fetchAPI(`/orders/${orderId}/rating`);
 }
